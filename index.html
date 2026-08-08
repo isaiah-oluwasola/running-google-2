@@ -15,9 +15,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
 
-  <!-- Puter.js (free, keyless AI — used for smart replies, summarizer, tone checker) -->
-  <script src="https://js.puter.com/v2/"></script>
-
   <style>
     *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
     body{font-family:'Inter',system-ui,-apple-system,sans-serif; background:#0a0e13; color:#f2f5f8; width:100vw; height:100vh; height:100dvh; overflow:hidden;}
@@ -1842,6 +1839,10 @@
   async function openSummarizer() {
     if (!currentChat?.messages?.length) {
       showToast('No messages to summarize yet', 'error');
+      return;
+    }
+    if (typeof puter === 'undefined') {
+      showToast('AI summarizer isn\'t available right now', 'error');
       return;
     }
     showModal(`
