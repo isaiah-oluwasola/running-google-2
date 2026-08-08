@@ -223,27 +223,39 @@
     #global-loader p{color:var(--text-dim); font-size:13px;}
 
     /* ===== AUDIO CALL OVERLAY ===== */
-    .call-screen{position:fixed; inset:0; z-index:15000; background:linear-gradient(165deg, var(--bg-elevated), var(--bg) 70%); display:none; flex-direction:column; align-items:center; justify-content:space-between; padding:70px 30px calc(46px + env(safe-area-inset-bottom)); text-align:center;}
+    .call-screen{position:fixed; inset:0; z-index:15000; background:linear-gradient(165deg, var(--bg-elevated), var(--bg) 70%); display:none; flex-direction:column; align-items:center; justify-content:space-between; padding:70px 30px calc(46px + env(safe-area-inset-bottom)); text-align:center; overflow:hidden;}
     .call-screen.active{display:flex; animation:fadeIn .25s ease;}
-    .call-top{font-size:12.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:8px;}
+    .call-top{font-size:12.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:8px; position:relative; z-index:2;}
     .call-top i{color:var(--accent); font-size:11px;}
-    .call-content{display:flex; flex-direction:column; align-items:center; gap:16px;}
+    .call-content{display:flex; flex-direction:column; align-items:center; gap:16px; position:relative; z-index:2;}
     .call-avatar-wrap{position:relative; width:128px; height:128px; display:flex; align-items:center; justify-content:center; margin-bottom:6px;}
     .call-avatar-placeholder{width:112px; height:112px; border-radius:50%; background:linear-gradient(135deg,var(--accent-dark),var(--accent)); display:flex; align-items:center; justify-content:center; font-size:44px; font-weight:800; color:#04140c; z-index:2; box-shadow:0 14px 40px -10px var(--accent-glow);}
     .call-pulse-ring{position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); opacity:.55; animation:callPulse 1.8s ease-out infinite;}
     .call-pulse-ring.ring2{animation-delay:.6s;}
     .call-screen:not(.ringing) .call-pulse-ring{display:none;}
     @keyframes callPulse{0%{transform:scale(.92); opacity:.55;} 100%{transform:scale(1.45); opacity:0;}}
-    .call-peer-name{font-size:25px; font-weight:800; letter-spacing:-.4px;}
-    .call-status{font-size:14.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; min-height:20px;}
+    .call-peer-name{font-size:25px; font-weight:800; letter-spacing:-.4px; text-shadow:0 2px 12px rgba(0,0,0,.4);}
+    .call-status{font-size:14.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; min-height:20px; text-shadow:0 2px 12px rgba(0,0,0,.4);}
     .call-status.connected{color:var(--accent); font-weight:600;}
-    .call-controls{display:flex; align-items:center; justify-content:center; gap:24px;}
+    .call-controls{display:flex; align-items:center; justify-content:center; gap:20px; position:relative; z-index:2;}
     .call-ctrl-btn{width:58px; height:58px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:19px; cursor:pointer; background:var(--bg-card); color:var(--text); transition:.15s; border:1px solid var(--border-soft);}
     .call-ctrl-btn:active{transform:scale(.9);}
     .call-ctrl-btn.active{background:var(--accent); color:#04140c; border-color:transparent;}
     .call-ctrl-btn.end-call{background:var(--danger); color:#fff; width:66px; height:66px; font-size:23px; border:none;}
     .call-ctrl-btn.accept-call{background:var(--accent); color:#04140c; width:66px; height:66px; font-size:23px; border:none; animation:acceptPop 1.1s ease-in-out infinite;}
     @keyframes acceptPop{0%,100%{transform:scale(1);} 50%{transform:scale(1.07);}}
+
+    /* ===== VIDEO CALL MODE ===== */
+    .call-remote-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; background:#000; display:none;}
+    .call-screen.video-mode .call-remote-video{display:block;}
+    .call-screen.video-mode{background:#05070a;}
+    .call-screen.video-mode::before{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 65%, rgba(0,0,0,.6) 100%); z-index:1;}
+    .call-screen.video-mode .call-avatar-wrap{display:none;}
+    .call-local-video-wrap{position:absolute; top:76px; right:18px; width:92px; height:132px; border-radius:16px; overflow:hidden; border:2px solid rgba(255,255,255,.25); box-shadow:0 10px 26px rgba(0,0,0,.5); z-index:3; display:none; background:#151b24; cursor:pointer;}
+    .call-screen.video-mode .call-local-video-wrap{display:block;}
+    .call-local-video-wrap.camera-off{display:none;}
+    .call-local-video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1);}
+    .call-local-video.back-camera{transform:none;}
   </style>
 </head>
 <body>
@@ -253,10 +265,13 @@
   <p id="global-loader-text">Signing you in…</p>
 </div>
 
-<!-- ===== AUDIO CALL OVERLAY ===== -->
+<!-- ===== AUDIO / VIDEO CALL OVERLAY ===== -->
 <div class="call-screen" id="call-screen">
-  <audio id="call-remote-audio" autoplay playsinline></audio>
-  <div class="call-top"><i class="fa-solid fa-lock"></i> Peer-to-peer audio call</div>
+  <video id="call-remote-video" class="call-remote-video" autoplay playsinline></video>
+  <div class="call-local-video-wrap" id="call-local-video-wrap" onclick="switchCamera()" title="Tap to flip camera">
+    <video id="call-local-video" class="call-local-video" autoplay playsinline muted></video>
+  </div>
+  <div class="call-top"><i class="fa-solid fa-lock"></i> Peer-to-peer call</div>
   <div class="call-content">
     <div class="call-avatar-wrap">
       <div class="call-pulse-ring"></div>
@@ -269,6 +284,9 @@
   <div class="call-controls">
     <button class="call-ctrl-btn" id="call-mute-btn" onclick="toggleCallMute()" title="Mute">
       <i class="fa-solid fa-microphone" id="call-mute-icon"></i>
+    </button>
+    <button class="call-ctrl-btn" id="call-camera-btn" onclick="toggleCallCamera()" title="Camera" style="display:none;">
+      <i class="fa-solid fa-video" id="call-camera-icon"></i>
     </button>
     <button class="call-ctrl-btn end-call" onclick="endCall()" title="End call">
       <i class="fa-solid fa-phone-slash"></i>
@@ -424,6 +442,7 @@
       </div>
       <div class="icon-btn" onclick="openSummarizer()" title="Summarize chat"><i class="fa-solid fa-list-ul"></i></div>
       <div class="icon-btn" onclick="startAudioCall()" title="Audio call"><i class="fa-solid fa-phone"></i></div>
+      <div class="icon-btn" onclick="startVideoCall()" title="Video call"><i class="fa-solid fa-video"></i></div>
     </div>
     <div class="content">
       <div class="chat-scroll" id="chat-messages"></div>
@@ -2085,7 +2104,7 @@
   }
 
   // ============================================
-  // 8) AUDIO CALLING (WebRTC + Supabase Realtime signaling — no server needed)
+  // 8) AUDIO / VIDEO CALLING (WebRTC + Supabase Realtime signaling — no server needed)
   // ============================================
   // Signaling design: every logged-in user keeps one persistent broadcast
   // channel open, named "user-<their id>". To reach someone, you join a
@@ -2172,11 +2191,14 @@
     };
 
     pc.ontrack = (e) => {
-      const audioEl = document.getElementById('call-remote-audio');
-      if (audioEl) {
-        audioEl.srcObject = e.streams[0];
-        audioEl.play().catch(() => {});
+      const videoEl = document.getElementById('call-remote-video');
+      if (!videoEl) return;
+      if (videoEl.srcObject !== e.streams[0]) {
+        videoEl.srcObject = e.streams[0];
+        videoEl.play().catch(() => {});
       }
+      const hasVideo = e.streams[0].getVideoTracks().length > 0;
+      document.getElementById('call-screen')?.classList.toggle('video-mode', hasVideo || activeCall?.callType === 'video');
     };
 
     pc.onconnectionstatechange = () => {
@@ -2192,7 +2214,29 @@
     return pc;
   }
 
-  async function startAudioCall() {
+  // Requests mic (+ camera for video calls), with automatic fallback to
+  // audio-only if the camera is unavailable/denied, so a video call attempt
+  // never just dies — it degrades gracefully instead.
+  async function acquireLocalMedia(wantVideo, facingMode) {
+    if (wantVideo) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true, video: { facingMode: facingMode || 'user' }
+        });
+        return { stream, gotVideo: true };
+      } catch (e) {
+        console.warn('Camera unavailable, falling back to audio-only:', e);
+        showToast('Camera unavailable — joining with audio only', 'error');
+      }
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    return { stream, gotVideo: false };
+  }
+
+  async function startAudioCall() { return startCall('audio'); }
+  async function startVideoCall() { return startCall('video'); }
+
+  async function startCall(callType) {
     if (!currentChat?.partner) return;
     if (activeCall) { showToast('You\'re already on a call', 'error'); return; }
     if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) {
@@ -2203,9 +2247,9 @@
     const peer = currentChat.partner;
     const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
-    let localStream;
+    let localStream, gotVideo;
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      ({ stream: localStream, gotVideo } = await acquireLocalMedia(callType === 'video', 'user'));
     } catch (e) {
       console.error('Mic permission error:', e);
       showToast('Microphone access is needed to make calls', 'error');
@@ -2215,6 +2259,7 @@
     activeCall = {
       callId, peerId: peer.id, peerName: peer.name || 'User',
       pc: null, localStream, direction: 'outgoing', status: 'dialing',
+      callType: gotVideo ? 'video' : 'audio', facingMode: 'user', isCameraOff: false,
       peerChannel: null, startedAt: null, timerInterval: null, ringTimeout: null,
       pendingIce: [], isMuted: false
     };
@@ -2235,7 +2280,8 @@
       await pc.setLocalDescription(offer);
 
       sendToCallChannel(peerChannel, {
-        type: 'offer', callId, from: currentUser.id, fromName: currentUser.name, sdp: offer
+        type: 'offer', callId, from: currentUser.id, fromName: currentUser.name,
+        callType: activeCall.callType, sdp: offer
       });
     } catch (e) {
       console.error('Start call error:', e);
@@ -2261,6 +2307,7 @@
     activeCall = {
       callId: data.callId, peerId: data.from, peerName: data.fromName || 'User',
       pc: null, localStream: null, direction: 'incoming', status: 'ringing',
+      callType: data.callType === 'video' ? 'video' : 'audio', facingMode: 'user', isCameraOff: false,
       peerChannel: null, startedAt: null, timerInterval: null, ringTimeout: null,
       pendingIce: [], isMuted: false, remoteOffer: data.sdp
     };
@@ -2286,9 +2333,9 @@
     if (acceptBtnEl) acceptBtnEl.style.display = 'none';
     document.getElementById('call-screen')?.classList.remove('ringing');
 
-    let localStream;
+    let localStream, gotVideo;
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      ({ stream: localStream, gotVideo } = await acquireLocalMedia(activeCall.callType === 'video', 'user'));
     } catch (e) {
       console.error('Mic permission error:', e);
       showToast('Microphone access is needed to answer calls', 'error');
@@ -2299,6 +2346,7 @@
 
     if (!activeCall || activeCall.callId !== callId) { localStream.getTracks().forEach(t => t.stop()); return; }
     activeCall.localStream = localStream;
+    if (!gotVideo) activeCall.callType = 'audio';
 
     try {
       const pc = createCallPeerConnection();
@@ -2317,6 +2365,7 @@
       activeCall.peerChannel = peerChannel;
 
       sendToCallChannel(peerChannel, { type: 'answer', callId, from: currentUser.id, sdp: answer });
+      showCallScreen();
     } catch (e) {
       console.error('Accept call error:', e);
       showToast('Couldn\'t connect the call', 'error');
@@ -2425,6 +2474,49 @@
     if (icon) icon.className = activeCall.isMuted ? 'fa-solid fa-microphone-slash' : 'fa-solid fa-microphone';
   }
 
+  function toggleCallCamera() {
+    if (!activeCall?.localStream || activeCall.callType !== 'video') return;
+    const videoTracks = activeCall.localStream.getVideoTracks();
+    if (!videoTracks.length) return;
+    activeCall.isCameraOff = !activeCall.isCameraOff;
+    videoTracks.forEach(t => t.enabled = !activeCall.isCameraOff);
+    document.getElementById('call-camera-btn')?.classList.toggle('active', activeCall.isCameraOff);
+    const icon = document.getElementById('call-camera-icon');
+    if (icon) icon.className = activeCall.isCameraOff ? 'fa-solid fa-video-slash' : 'fa-solid fa-video';
+    document.getElementById('call-local-video-wrap')?.classList.toggle('camera-off', activeCall.isCameraOff);
+  }
+
+  // Flips between front/back camera mid-call without renegotiating —
+  // replaceTrack() swaps the outgoing video on the existing connection.
+  async function switchCamera() {
+    if (!activeCall?.pc || activeCall.callType !== 'video' || activeCall.isCameraOff) return;
+    const newFacing = activeCall.facingMode === 'user' ? 'environment' : 'user';
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: false, video: { facingMode: newFacing }
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      if (!newTrack) return;
+
+      const sender = activeCall.pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) await sender.replaceTrack(newTrack);
+
+      const oldTrack = activeCall.localStream.getVideoTracks()[0];
+      if (oldTrack) { activeCall.localStream.removeTrack(oldTrack); oldTrack.stop(); }
+      activeCall.localStream.addTrack(newTrack);
+
+      activeCall.facingMode = newFacing;
+      const localVideoEl = document.getElementById('call-local-video');
+      if (localVideoEl) {
+        localVideoEl.srcObject = activeCall.localStream;
+        localVideoEl.classList.toggle('back-camera', newFacing === 'environment');
+      }
+    } catch (e) {
+      console.error('Switch camera error:', e);
+      showToast('Couldn\'t switch camera', 'error');
+    }
+  }
+
   // ----- Call screen UI -----
   function showCallScreen() {
     const el = document.getElementById('call-screen');
@@ -2436,9 +2528,22 @@
     const acceptBtn = document.getElementById('call-accept-btn');
     if (acceptBtn) acceptBtn.style.display = 'none';
     el.classList.remove('ringing');
-    updateCallScreenStatus(activeCall.direction === 'outgoing' ? 'Calling…' : 'Connecting…');
+
+    const isVideo = activeCall.callType === 'video';
+    el.classList.toggle('video-mode', isVideo);
+    const camBtn = document.getElementById('call-camera-btn');
+    if (camBtn) camBtn.style.display = isVideo ? 'flex' : 'none';
+    const localVideoEl = document.getElementById('call-local-video');
+    if (localVideoEl) localVideoEl.srcObject = isVideo ? activeCall.localStream : null;
+    document.getElementById('call-local-video-wrap')?.classList.remove('camera-off');
+
+    updateCallScreenStatus(activeCall.direction === 'outgoing'
+      ? (isVideo ? 'Video calling…' : 'Calling…')
+      : 'Connecting…');
     document.getElementById('call-mute-icon') && (document.getElementById('call-mute-icon').className = 'fa-solid fa-microphone');
     document.getElementById('call-mute-btn')?.classList.remove('active');
+    document.getElementById('call-camera-icon') && (document.getElementById('call-camera-icon').className = 'fa-solid fa-video');
+    document.getElementById('call-camera-btn')?.classList.remove('active');
     el.classList.add('active');
   }
 
@@ -2452,7 +2557,9 @@
     const acceptBtn = document.getElementById('call-accept-btn');
     if (acceptBtn) acceptBtn.style.display = 'flex';
     el.classList.add('ringing');
-    updateCallScreenStatus('Incoming call…');
+    el.classList.remove('video-mode');
+    document.getElementById('call-camera-btn').style.display = 'none';
+    updateCallScreenStatus(activeCall.callType === 'video' ? 'Incoming video call…' : 'Incoming call…');
     el.classList.add('active');
   }
 
@@ -2466,13 +2573,19 @@
 
   function hideCallScreen() {
     const el = document.getElementById('call-screen');
-    if (el) { el.classList.remove('active'); el.classList.remove('ringing'); }
+    if (el) { el.classList.remove('active'); el.classList.remove('ringing'); el.classList.remove('video-mode'); }
     const acceptBtn = document.getElementById('call-accept-btn');
     if (acceptBtn) acceptBtn.style.display = 'none';
-    const audioEl = document.getElementById('call-remote-audio');
-    if (audioEl) audioEl.srcObject = null;
+    const remoteVideoEl = document.getElementById('call-remote-video');
+    if (remoteVideoEl) remoteVideoEl.srcObject = null;
+    const localVideoEl = document.getElementById('call-local-video');
+    if (localVideoEl) { localVideoEl.srcObject = null; localVideoEl.classList.remove('back-camera'); }
+    document.getElementById('call-local-video-wrap')?.classList.remove('camera-off');
+    document.getElementById('call-camera-btn')?.style && (document.getElementById('call-camera-btn').style.display = 'none');
     document.getElementById('call-mute-icon') && (document.getElementById('call-mute-icon').className = 'fa-solid fa-microphone');
     document.getElementById('call-mute-btn')?.classList.remove('active');
+    document.getElementById('call-camera-icon') && (document.getElementById('call-camera-icon').className = 'fa-solid fa-video');
+    document.getElementById('call-camera-btn')?.classList.remove('active');
   }
 
   // ----- Ringtone / ringback (synthesized — no audio files needed) -----
@@ -2563,9 +2676,12 @@
   window.toggleVoiceInput = toggleVoiceInput;
   window.hideToneBanner = hideToneBanner;
   window.startAudioCall = startAudioCall;
+  window.startVideoCall = startVideoCall;
   window.acceptCall = acceptCall;
   window.endCall = endCall;
   window.toggleCallMute = toggleCallMute;
+  window.toggleCallCamera = toggleCallCamera;
+  window.switchCamera = switchCamera;
 </script>
 </body>
 </html>
