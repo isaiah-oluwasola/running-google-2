@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Supabase SDK (used for data: profiles, messages, groups, realtime) -->
+  <!-- Supabase SDK (used for data: profiles, messages, realtime) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Firebase SDK (used for authentication: Google / Apple sign-in) -->
@@ -43,7 +43,6 @@
     .topbar .avatar-row{display:flex; align-items:center; gap:12px; cursor:pointer;}
     .avatar{border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--bg-card-2);}
     .avatar-placeholder{border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--accent-dark),var(--accent)); display:flex; align-items:center; justify-content:center; color:#04140c; font-weight:700; font-size:18px;}
-    .avatar-placeholder.group-avatar{background:linear-gradient(135deg,#6c8cff,#3b5bdb);}
 
     .content{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;}
     .content::-webkit-scrollbar{width:0;}
@@ -216,115 +215,47 @@
     /* ===== SUMMARY MODAL ===== */
     .summary-box{background:var(--bg-card); border:1px solid var(--border-soft); border-radius:14px; padding:14px 16px; font-size:13.5px; line-height:1.6; color:var(--text); text-align:left; margin-bottom:16px; max-height:300px; overflow-y:auto;}
 
-    /* ===== GLOBAL AUTH LOADER ===== */
+    /* ===== GLOBAL AUTH LOADER (new) ===== */
     #global-loader{position:fixed; inset:0; background:var(--bg); z-index:20000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; transition:opacity .25s ease;}
     #global-loader.hidden{opacity:0; pointer-events:none;}
     #global-loader .auth-logo{width:64px; height:64px; font-size:28px; margin-bottom:4px; animation:pulseLogo 1.4s ease-in-out infinite;}
     @keyframes pulseLogo{0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(.94); opacity:.75;}}
     #global-loader p{color:var(--text-dim); font-size:13px;}
 
-    /* ======================================================================
-       CALL SCREENS — WhatsApp-style layout
-       Audio call: dark background with subtle repeating pattern, top bar
-       (lock + "End-to-end encrypted" + add-person), centered name/timer,
-       circular avatar, bottom row of round control buttons.
-       Video call: full-bleed remote video, same top bar overlay, small
-       rounded local video preview pinned bottom-right, same control row.
-       ====================================================================== */
-    .call-screen{
-      position:fixed; inset:0; z-index:15000; display:none; flex-direction:column;
-      background:#0b0f14
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.045' stroke-width='1.5'%3E%3Ccircle cx='20' cy='20' r='8'/%3E%3Cpath d='M55 15l6 6-6 6-6-6z'/%3E%3Cpath d='M95 10c4 4 4 10 0 14'/%3E%3Ccircle cx='100' cy='55' r='5'/%3E%3Cpath d='M15 60l8 8M15 68l8-8'/%3E%3Cpath d='M55 60a8 8 0 1 0 16 0a8 8 0 1 0-16 0'/%3E%3Cpath d='M90 90l10 10M100 90l-10 10'/%3E%3Ccircle cx='25' cy='100' r='6'/%3E%3Cpath d='M55 95l6 10h-12z'/%3E%3C/g%3E%3C/svg%3E");
-      background-size:220px 220px;
-      overflow:hidden; text-align:center;
-    }
+    /* ===== AUDIO CALL OVERLAY ===== */
+    .call-screen{position:fixed; inset:0; z-index:15000; background:linear-gradient(165deg, var(--bg-elevated), var(--bg) 70%); display:none; flex-direction:column; align-items:center; justify-content:space-between; padding:70px 30px calc(46px + env(safe-area-inset-bottom)); text-align:center; overflow:hidden;}
     .call-screen.active{display:flex; animation:fadeIn .25s ease;}
-    .call-topbar{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:calc(16px + env(safe-area-inset-top)) 18px 14px; position:relative; z-index:3; flex-shrink:0;
-    }
-    .call-topbar .call-back-btn{
-      width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,.08); color:#fff;
-      display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; flex-shrink:0;
-    }
-    .call-encrypt-note{
-      display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:rgba(255,255,255,.65);
-      letter-spacing:.2px; flex:1; justify-content:center;
-    }
-    .call-encrypt-note i{font-size:10px;}
-    .call-add-person-btn{
-      width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,.08); color:#fff;
-      display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; flex-shrink:0;
-    }
-    .call-add-person-btn:active, .call-topbar .call-back-btn:active{transform:scale(.9); background:rgba(255,255,255,.16);}
-
-    .call-content{
-      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
-      position:relative; z-index:2; padding:10px 30px;
-    }
-    .call-avatar-wrap{position:relative; width:132px; height:132px; display:flex; align-items:center; justify-content:center;}
-    .call-avatar-placeholder{width:118px; height:118px; border-radius:50%; background:linear-gradient(135deg,var(--accent-dark),var(--accent)); display:flex; align-items:center; justify-content:center; font-size:46px; font-weight:800; color:#04140c; z-index:2; box-shadow:0 14px 40px -10px rgba(0,0,0,.5); overflow:hidden;}
-    .call-avatar-placeholder.group-avatar{background:linear-gradient(135deg,#6c8cff,#3b5bdb);}
-    .call-pulse-ring{position:absolute; inset:0; border-radius:50%; border:2px solid rgba(255,255,255,.5); opacity:.55; animation:callPulse 1.8s ease-out infinite;}
+    .call-top{font-size:12.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:8px; position:relative; z-index:2;}
+    .call-top i{color:var(--accent); font-size:11px;}
+    .call-content{display:flex; flex-direction:column; align-items:center; gap:16px; position:relative; z-index:2;}
+    .call-avatar-wrap{position:relative; width:128px; height:128px; display:flex; align-items:center; justify-content:center; margin-bottom:6px;}
+    .call-avatar-placeholder{width:112px; height:112px; border-radius:50%; background:linear-gradient(135deg,var(--accent-dark),var(--accent)); display:flex; align-items:center; justify-content:center; font-size:44px; font-weight:800; color:#04140c; z-index:2; box-shadow:0 14px 40px -10px var(--accent-glow);}
+    .call-pulse-ring{position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); opacity:.55; animation:callPulse 1.8s ease-out infinite;}
     .call-pulse-ring.ring2{animation-delay:.6s;}
     .call-screen:not(.ringing) .call-pulse-ring{display:none;}
-    @keyframes callPulse{0%{transform:scale(.92); opacity:.55;} 100%{transform:scale(1.4); opacity:0;}}
-    .call-peer-name{font-size:27px; font-weight:800; letter-spacing:-.4px; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.4);}
-    .call-status{font-size:15px; color:rgba(255,255,255,.68); font-variant-numeric:tabular-nums; min-height:20px; text-shadow:0 2px 12px rgba(0,0,0,.4);}
+    @keyframes callPulse{0%{transform:scale(.92); opacity:.55;} 100%{transform:scale(1.45); opacity:0;}}
+    .call-peer-name{font-size:25px; font-weight:800; letter-spacing:-.4px; text-shadow:0 2px 12px rgba(0,0,0,.4);}
+    .call-status{font-size:14.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; min-height:20px; text-shadow:0 2px 12px rgba(0,0,0,.4);}
     .call-status.connected{color:var(--accent); font-weight:600;}
-
-    .call-controls{
-      display:flex; align-items:center; justify-content:center; gap:22px; position:relative; z-index:3;
-      padding:0 20px calc(40px + env(safe-area-inset-bottom)); flex-shrink:0;
-    }
-    .call-ctrl-btn{
-      width:58px; height:58px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center;
-      font-size:20px; cursor:pointer; background:rgba(255,255,255,.14); color:#fff; transition:.15s; backdrop-filter:blur(4px);
-    }
+    .call-controls{display:flex; align-items:center; justify-content:center; gap:20px; position:relative; z-index:2;}
+    .call-ctrl-btn{width:58px; height:58px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:19px; cursor:pointer; background:var(--bg-card); color:var(--text); transition:.15s; border:1px solid var(--border-soft);}
     .call-ctrl-btn:active{transform:scale(.9);}
-    .call-ctrl-btn.active{background:#fff; color:#0b0f14;}
-    .call-ctrl-btn.end-call{background:var(--danger); color:#fff; width:64px; height:64px; font-size:24px;}
-    .call-ctrl-btn.accept-call{background:var(--accent); color:#04140c; width:64px; height:64px; font-size:24px; animation:acceptPop 1.1s ease-in-out infinite;}
+    .call-ctrl-btn.active{background:var(--accent); color:#04140c; border-color:transparent;}
+    .call-ctrl-btn.end-call{background:var(--danger); color:#fff; width:66px; height:66px; font-size:23px; border:none;}
+    .call-ctrl-btn.accept-call{background:var(--accent); color:#04140c; width:66px; height:66px; font-size:23px; border:none; animation:acceptPop 1.1s ease-in-out infinite;}
     @keyframes acceptPop{0%,100%{transform:scale(1);} 50%{transform:scale(1.07);}}
 
     /* ===== VIDEO CALL MODE ===== */
     .call-remote-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; background:#000; display:none;}
     .call-screen.video-mode .call-remote-video{display:block;}
     .call-screen.video-mode{background:#05070a;}
-    .call-screen.video-mode::before{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 26%, rgba(0,0,0,0) 60%, rgba(0,0,0,.65) 100%); z-index:1; pointer-events:none;}
+    .call-screen.video-mode::before{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 65%, rgba(0,0,0,.6) 100%); z-index:1;}
     .call-screen.video-mode .call-avatar-wrap{display:none;}
-    .call-screen.video-mode .call-peer-name{font-size:19px;}
-    .call-screen.video-mode .call-content{justify-content:flex-start; padding-top:6px; gap:4px;}
-    .call-local-video-wrap{
-      position:absolute; bottom:calc(128px + env(safe-area-inset-bottom)); right:16px; width:104px; height:150px;
-      border-radius:14px; overflow:hidden; border:1.5px solid rgba(255,255,255,.2); box-shadow:0 10px 26px rgba(0,0,0,.5);
-      z-index:4; display:none; background:#151b24; cursor:pointer;
-    }
+    .call-local-video-wrap{position:absolute; top:76px; right:18px; width:92px; height:132px; border-radius:16px; overflow:hidden; border:2px solid rgba(255,255,255,.25); box-shadow:0 10px 26px rgba(0,0,0,.5); z-index:3; display:none; background:#151b24; cursor:pointer;}
     .call-screen.video-mode .call-local-video-wrap{display:block;}
     .call-local-video-wrap.camera-off{display:none;}
     .call-local-video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1);}
     .call-local-video.back-camera{transform:none;}
-    .call-local-video-wrap .flip-hint{position:absolute; bottom:4px; right:4px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px;}
-
-    /* ===== GROUP MEMBER PICKER ===== */
-    .member-row{display:flex; align-items:center; gap:12px; padding:10px 4px; cursor:pointer;}
-    .member-row .avatar-placeholder{width:42px; height:42px; font-size:16px;}
-    .member-row .info{flex:1; min-width:0;}
-    .member-row .info .name{font-size:14.5px; font-weight:600;}
-    .member-row .info .sub{font-size:12px; color:var(--text-faint);}
-    .member-check{width:22px; height:22px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:transparent; transition:.15s;}
-    .member-check.checked{background:var(--accent); border-color:var(--accent); color:#04140c;}
-    .selected-chip-row{display:flex; gap:8px; flex-wrap:wrap; padding:0 0 12px;}
-    .selected-chip{display:flex; align-items:center; gap:6px; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:16px; padding:5px 10px 5px 6px; font-size:12px; font-weight:600;}
-    .selected-chip .x{cursor:pointer; opacity:.6; font-weight:800;}
-    .selected-chip .mini-avatar{width:20px; height:20px; border-radius:50%; background:var(--accent); color:#04140c; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800;}
-
-    .fab{
-      position:absolute; bottom:calc(78px + env(safe-area-inset-bottom)); right:20px; width:52px; height:52px; border-radius:50%;
-      background:var(--accent); color:#04140c; border:none; display:flex; align-items:center; justify-content:center;
-      font-size:19px; box-shadow:0 10px 24px -6px var(--accent-glow); cursor:pointer; z-index:5;
-    }
-    .fab:active{transform:scale(.92);}
   </style>
 </head>
 <body>
@@ -334,18 +265,13 @@
   <p id="global-loader-text">Signing you in…</p>
 </div>
 
-<!-- ===== AUDIO / VIDEO CALL OVERLAY (WhatsApp-style) ===== -->
+<!-- ===== AUDIO / VIDEO CALL OVERLAY ===== -->
 <div class="call-screen" id="call-screen">
   <video id="call-remote-video" class="call-remote-video" autoplay playsinline></video>
-
-  <div class="call-topbar">
-    <button class="call-back-btn" onclick="minimizeCallHint()" title="Back"><i class="fa-solid fa-chevron-left"></i></button>
-    <div class="call-encrypt-note"><i class="fa-solid fa-lock"></i> End-to-end encrypted</div>
-    <button class="call-add-person-btn" onclick="showToast('Group calling is coming soon', 'success')" title="Add person">
-      <i class="fa-solid fa-user-plus"></i>
-    </button>
+  <div class="call-local-video-wrap" id="call-local-video-wrap" onclick="switchCamera()" title="Tap to flip camera">
+    <video id="call-local-video" class="call-local-video" autoplay playsinline muted></video>
   </div>
-
+  <div class="call-top"><i class="fa-solid fa-lock"></i> Peer-to-peer call</div>
   <div class="call-content">
     <div class="call-avatar-wrap">
       <div class="call-pulse-ring"></div>
@@ -355,21 +281,12 @@
     <div class="call-peer-name" id="call-peer-name"></div>
     <div class="call-status" id="call-status">Calling…</div>
   </div>
-
-  <div class="call-local-video-wrap" id="call-local-video-wrap" onclick="switchCamera()" title="Tap to flip camera">
-    <video id="call-local-video" class="call-local-video" autoplay playsinline muted></video>
-    <span class="flip-hint"><i class="fa-solid fa-rotate"></i></span>
-  </div>
-
   <div class="call-controls">
-    <button class="call-ctrl-btn" id="call-speaker-btn" onclick="toggleCallSpeaker()" title="Speaker">
-      <i class="fa-solid fa-volume-high" id="call-speaker-icon"></i>
-    </button>
-    <button class="call-ctrl-btn" id="call-video-toggle-btn" onclick="handleVideoToggleBtn()" title="Video">
-      <i class="fa-solid fa-video" id="call-video-toggle-icon"></i>
-    </button>
     <button class="call-ctrl-btn" id="call-mute-btn" onclick="toggleCallMute()" title="Mute">
       <i class="fa-solid fa-microphone" id="call-mute-icon"></i>
+    </button>
+    <button class="call-ctrl-btn" id="call-camera-btn" onclick="toggleCallCamera()" title="Camera" style="display:none;">
+      <i class="fa-solid fa-video" id="call-camera-icon"></i>
     </button>
     <button class="call-ctrl-btn end-call" onclick="endCall()" title="End call">
       <i class="fa-solid fa-phone-slash"></i>
@@ -492,19 +409,15 @@
     <div class="topbar">
       <h1><i class="fa-regular fa-message"></i> SayHi</h1>
       <div class="grow"></div>
-      <div class="icon-btn" onclick="openGroupCreator()" title="New group"><i class="fa-solid fa-user-group"></i></div>
       <div class="icon-btn" onclick="go('screen-search')"><i class="fa-solid fa-pen-to-square"></i></div>
     </div>
-    <div class="content" style="position:relative;">
-      <div id="chats-list">
-        <div class="empty-state" style="padding-top:80px;">
-          <i class="fa-regular fa-comment-dots"></i>
-          <h3>No Messages Yet</h3>
-          <p>Search for friends or start a group to begin chatting!</p>
-        </div>
+    <div class="content" id="chats-list">
+      <div class="empty-state" style="padding-top:80px;">
+        <i class="fa-regular fa-comment-dots"></i>
+        <h3>No Messages Yet</h3>
+        <p>Search for friends to start chatting!</p>
       </div>
     </div>
-    <button class="fab" onclick="openGroupCreator()" title="New group"><i class="fa-solid fa-user-group"></i></button>
     <div class="bottomnav">
       <button class="navitem active" data-screen="screen-chats"><i class="fa-regular fa-message"></i>Chats</button>
       <button class="navitem" data-screen="screen-search"><i class="fa-solid fa-magnifying-glass"></i>Search</button>
@@ -513,11 +426,11 @@
     </div>
   </section>
 
-  <!-- ===== CHAT SCREEN (direct + group) ===== -->
+  <!-- ===== CHAT SCREEN ===== -->
   <section class="screen" id="screen-chat">
     <div class="topbar">
       <div class="icon-btn" onclick="closeChat()"><i class="fa-solid fa-arrow-left"></i></div>
-      <div class="avatar-row grow" id="chat-header-info" onclick="openChatInfo()">
+      <div class="avatar-row grow">
         <div class="avatar-wrap">
           <div class="avatar-placeholder" id="chat-avatar" style="width:40px;height:40px;font-size:15px;"></div>
           <span class="dot-online" id="chat-online-dot" style="width:8px;height:8px;display:none;"></span>
@@ -572,115 +485,6 @@
       <button class="navitem active" data-screen="screen-search"><i class="fa-solid fa-magnifying-glass"></i>Search</button>
       <button class="navitem" data-screen="screen-generate"><i class="fa-solid fa-wand-magic-sparkles"></i>Generate</button>
       <button class="navitem" data-screen="screen-settings"><i class="fa-solid fa-gear"></i>Settings</button>
-    </div>
-  </section>
-
-  <!-- ===== NEW GROUP: PICK MEMBERS ===== -->
-  <section class="screen" id="screen-group-create">
-    <div class="topbar">
-      <div class="icon-btn" onclick="closeGroupCreator()"><i class="fa-solid fa-arrow-left"></i></div>
-      <h1 class="grow">New Group</h1>
-    </div>
-    <div class="content">
-      <div style="padding:16px 20px 0;">
-        <div class="field" style="margin-bottom:10px;">
-          <i class="fa-solid fa-magnifying-glass" style="color:var(--text-faint)"></i>
-          <input type="text" id="group-member-search" placeholder="Search people to add...">
-        </div>
-        <div class="selected-chip-row" id="group-selected-chips"></div>
-      </div>
-      <div id="group-candidates-list" style="padding:0 20px 20px;">
-        <div class="empty-state">
-          <i class="fa-solid fa-users"></i>
-          <h3>Add People</h3>
-          <p>Search for friends to add to your group</p>
-        </div>
-      </div>
-    </div>
-    <div style="padding:14px 20px calc(16px + env(safe-area-inset-bottom)); background:var(--bg-elevated); border-top:1px solid var(--border-soft);">
-      <button class="btn btn-primary" id="group-next-btn" onclick="showGroupNameStep()">
-        <i class="fa-solid fa-arrow-right"></i> Next
-      </button>
-    </div>
-  </section>
-
-  <!-- ===== NEW GROUP: NAME IT ===== -->
-  <section class="screen" id="screen-group-name">
-    <div class="topbar">
-      <div class="icon-btn" onclick="go('screen-group-create')"><i class="fa-solid fa-arrow-left"></i></div>
-      <h1 class="grow">Name Group</h1>
-    </div>
-    <div class="username-screen">
-      <div class="icon-wrap avatar-placeholder group-avatar" style="font-size:32px; background:linear-gradient(135deg,#6c8cff,#3b5bdb);"><i class="fa-solid fa-user-group"></i></div>
-      <h2>Give your group a name</h2>
-      <p id="group-member-count-label">0 members selected</p>
-      <div class="field">
-        <i class="fa-solid fa-users" style="color:var(--text-faint);"></i>
-        <input type="text" id="group-name-input" placeholder="e.g. Weekend Squad" maxlength="40" autocomplete="off">
-      </div>
-      <div class="username-error" id="group-name-error"></div>
-      <button class="btn btn-primary" id="group-create-btn" onclick="createGroup()">
-        <i class="fa-solid fa-check"></i> Create Group
-      </button>
-    </div>
-  </section>
-
-  <!-- ===== GROUP INFO ===== -->
-  <section class="screen" id="screen-group-info">
-    <div class="topbar">
-      <div class="icon-btn" onclick="back('screen-chat')"><i class="fa-solid fa-arrow-left"></i></div>
-      <h1 class="grow">Group Info</h1>
-    </div>
-    <div class="content">
-      <div style="display:flex; flex-direction:column; align-items:center; padding:28px 20px 10px; text-align:center;">
-        <div class="avatar-placeholder group-avatar" id="group-info-avatar" style="width:84px;height:84px;font-size:30px; margin-bottom:14px;"><i class="fa-solid fa-user-group"></i></div>
-        <div style="font-size:19px; font-weight:800;" id="group-info-name"></div>
-        <div style="font-size:12.5px; color:var(--text-faint); margin-top:4px;" id="group-info-sub"></div>
-      </div>
-      <div class="settings-group" style="margin-top:16px;">
-        <div class="settings-row" onclick="openAddMembers()">
-          <div class="ic"><i class="fa-solid fa-user-plus"></i></div>
-          <div class="label"><div class="t">Add Members</div><div class="s">Invite more people to this group</div></div>
-          <i class="fa-solid fa-chevron-right" style="color:var(--text-faint); font-size:12px;"></i>
-        </div>
-      </div>
-      <div style="padding:0 20px 8px; font-size:11.5px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.4px;" id="group-members-heading">Members</div>
-      <div id="group-members-list"></div>
-      <div class="settings-group" style="margin-top:20px;">
-        <div class="settings-row danger" onclick="leaveGroup()">
-          <div class="ic"><i class="fa-solid fa-right-from-bracket"></i></div>
-          <div class="label"><div class="t">Leave Group</div></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== ADD MEMBERS TO EXISTING GROUP ===== -->
-  <section class="screen" id="screen-group-add-members">
-    <div class="topbar">
-      <div class="icon-btn" onclick="back('screen-group-info')"><i class="fa-solid fa-arrow-left"></i></div>
-      <h1 class="grow">Add Members</h1>
-    </div>
-    <div class="content">
-      <div style="padding:16px 20px 0;">
-        <div class="field" style="margin-bottom:10px;">
-          <i class="fa-solid fa-magnifying-glass" style="color:var(--text-faint)"></i>
-          <input type="text" id="add-member-search" placeholder="Search people to add...">
-        </div>
-        <div class="selected-chip-row" id="add-member-chips"></div>
-      </div>
-      <div id="add-member-candidates-list" style="padding:0 20px 20px;">
-        <div class="empty-state">
-          <i class="fa-solid fa-users"></i>
-          <h3>Add People</h3>
-          <p>Search for friends to add</p>
-        </div>
-      </div>
-    </div>
-    <div style="padding:14px 20px calc(16px + env(safe-area-inset-bottom)); background:var(--bg-elevated); border-top:1px solid var(--border-soft);">
-      <button class="btn btn-primary" id="add-members-confirm-btn" onclick="confirmAddMembers()">
-        <i class="fa-solid fa-check"></i> Add to Group
-      </button>
     </div>
   </section>
 
@@ -755,9 +559,9 @@
           <div class="label"><div class="t">Terms & Conditions</div></div>
           <i class="fa-solid fa-chevron-right" style="color:var(--text-faint); font-size:12px;"></i>
         </div>
-        <div class="settings-row" onclick="showToast('Version 1.1.0', 'success')">
+        <div class="settings-row" onclick="showToast('Version 1.0.0', 'success')">
           <div class="ic"><i class="fa-solid fa-circle-info"></i></div>
-          <div class="label"><div class="t">About SayHi</div><div class="s">Version 1.1.0</div></div>
+          <div class="label"><div class="t">About SayHi</div><div class="s">Version 1.0.0</div></div>
           <i class="fa-solid fa-chevron-right" style="color:var(--text-faint); font-size:12px;"></i>
         </div>
       </div>
@@ -778,44 +582,12 @@
   </section>
 
 </div>
+
 <script>
   // ============================================
-  // SUPABASE CONFIGURATION (data: profiles, messages, groups, realtime)
-  //
-  // NEW TABLES REQUIRED FOR GROUP CHAT — run this in the Supabase SQL editor:
-  //
-  //   -- NOTE: user id columns are TEXT, not uuid — profiles.id stores the
-  //   -- Firebase UID (a string like "AbC123XyZ..."), which is NOT a valid
-  //   -- Postgres uuid. Using `uuid` for these columns is what breaks group
-  //   -- creation with an "invalid input syntax for type uuid" error.
-  //   create table if not exists groups (
-  //     id uuid primary key default gen_random_uuid(),
-  //     name text not null,
-  //     created_by text not null,
-  //     created_at timestamptz default now()
-  //   );
-  //   create table if not exists group_members (
-  //     id uuid primary key default gen_random_uuid(),
-  //     group_id uuid references groups(id) on delete cascade,
-  //     user_id text not null,
-  //     joined_at timestamptz default now(),
-  //     unique(group_id, user_id)
-  //   );
-  //   alter table messages add column if not exists group_id uuid references groups(id) on delete cascade;
-  //   alter table messages alter column receiver_id drop not null;
-  //
-  // If you already ran the old (broken) version of this SQL with `uuid`
-  // columns, drop and recreate the two tables:
-  //   drop table if exists group_members;
-  //   drop table if exists groups;
-  //   -- then re-run the corrected block above
-  //
-  // Also make sure RLS is disabled on groups/group_members (or has
-  // permissive policies), matching however profiles/messages are set up —
-  // if RLS is ON with no policy, every insert/select silently returns
-  // "new row violates row-level security policy" or an empty result.
+  // SUPABASE CONFIGURATION (data only: profiles, messages, realtime)
   // ============================================
-  const SUPABASE_URL = 'https://pgjxbcsircqtkmzdafhy.supabase.co';
+ const SUPABASE_URL = 'https://pgjxbcsircqtkmzdafhy.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnanhiY3NpcmNxdGttemRhZmh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMTE2MTEsImV4cCI6MjEwMTY4NzYxMX0.6M-ArErI354xaMhcKXUyBbolUhfQfMmEWg_dzMpNwmI';
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -841,14 +613,12 @@
   // APP STATE
   // ============================================
   let currentUser = null;
-  let currentChat = null; // { partner, messages } for DMs OR { isGroup:true, group, messages, memberMap } for groups
+  let currentChat = null;
   let messageSubscription = null;
   const historyStack = ['screen-auth'];
   let currentTheme = 'dark';
   let isProcessingAuth = false;
   let isSigningIn = false;
-  let myGroups = []; // groups the current user belongs to: [{id,name,created_by,members:[...]}]
-  const groupChannels = {}; // group_id -> realtime channel
 
   // ============================================
   // GLOBAL LOADER
@@ -1026,52 +796,11 @@
   // ============================================
   // FIREBASE AUTH (Google / Apple sign-in)
   // ============================================
-  // Checks for the two most common reasons Firebase popup/redirect auth
-  // fails silently on a static single-file app, and returns a message the
-  // person can actually act on instead of a raw Firebase error code.
-  function diagnoseAuthEnvironment() {
-    if (location.protocol === 'file:') {
-      return 'This page is open as a local file (file://). Firebase sign-in needs http:// or https:// — serve this file from a local server or host it (e.g. Netlify, Vercel, GitHub Pages) and open it from that URL.';
-    }
-    if (window.self !== window.top) {
-      return 'This looks like it\'s running inside an embedded preview/iframe, which blocks Google\'s sign-in popup. Open the file directly in its own browser tab, not inside a preview panel.';
-    }
-    return null;
-  }
-
-  function explainAuthError(error) {
-    const envIssue = diagnoseAuthEnvironment();
-    if (envIssue) return envIssue;
-    switch (error?.code) {
-      case 'auth/unauthorized-domain':
-        return 'This domain isn\'t authorized in Firebase. Go to Firebase Console → Authentication → Settings → Authorized domains and add ' + location.hostname + '.';
-      case 'auth/operation-not-supported-in-this-environment':
-        return 'Google sign-in isn\'t supported in this environment (often file:// or an embedded webview). Open the app in a normal browser tab over http(s).';
-      case 'auth/configuration-not-found':
-        return 'Google sign-in isn\'t enabled for this Firebase project yet. Go to Firebase Console → Authentication → Sign-in method → enable Google.';
-      case 'auth/popup-blocked':
-        return 'Your browser blocked the sign-in popup. Allow popups for this site and try again.';
-      case 'auth/network-request-failed':
-        return 'Network error reaching Firebase — check your internet connection.';
-      default:
-        return error?.message || 'Sign-in failed for an unknown reason.';
-    }
-  }
-
   async function handleGoogleLogin() {
     if (isSigningIn) return;
     isSigningIn = true;
     const btn = document.getElementById('google-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...'; }
-
-    const envIssue = diagnoseAuthEnvironment();
-    if (envIssue) {
-      showToast(envIssue, 'error');
-      console.warn('Auth environment issue:', envIssue);
-      isSigningIn = false;
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-google"></i> Continue with Google'; }
-      return;
-    }
 
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -1086,10 +815,10 @@
           return;
         } catch (redirectError) {
           console.error('Google redirect sign-in error:', redirectError);
-          showToast(explainAuthError(redirectError), 'error');
+          showToast('Google sign-in failed: ' + redirectError.message, 'error');
         }
       } else if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
-        showToast(explainAuthError(error), 'error');
+        showToast('Google sign-in failed: ' + error.message, 'error');
       }
     } finally {
       isSigningIn = false;
@@ -1103,15 +832,6 @@
     const btn = document.getElementById('apple-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...'; }
 
-    const envIssue = diagnoseAuthEnvironment();
-    if (envIssue) {
-      showToast(envIssue, 'error');
-      console.warn('Auth environment issue:', envIssue);
-      isSigningIn = false;
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-apple"></i> Continue with Apple'; }
-      return;
-    }
-
     const provider = new firebase.auth.OAuthProvider('apple.com');
 
     try {
@@ -1124,10 +844,10 @@
           return;
         } catch (redirectError) {
           console.error('Apple redirect sign-in error:', redirectError);
-          showToast(explainAuthError(redirectError), 'error');
+          showToast('Apple sign-in failed: ' + redirectError.message, 'error');
         }
       } else if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
-        showToast(explainAuthError(error), 'error');
+        showToast('Apple sign-in failed: ' + error.message, 'error');
       }
     } finally {
       isSigningIn = false;
@@ -1304,11 +1024,10 @@
   // ============================================
   // ENTER APP
   // ============================================
-  async function enterApp() {
+  function enterApp() {
     console.log('Entering app with user:', currentUser);
     hideGlobalLoader();
     go('screen-chats');
-    await loadMyGroups();
     loadChats();
     setupRealtimeSubscriptions();
     setupCallSignaling();
@@ -1387,408 +1106,7 @@
   }
 
   // ============================================
-  // GROUPS — data loading
-  // ============================================
-  async function loadMyGroups() {
-    if (!currentUser) return;
-    try {
-      const { data: memberships, error: memErr } = await supabaseClient
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', currentUser.id);
-
-      if (memErr) {
-        if (memErr.code === '42P01') {
-          console.warn('group_members table not found yet — run the group SQL at the top of the <script> tag in Supabase.');
-        } else {
-          console.warn('Load groups error:', memErr);
-        }
-        myGroups = [];
-        return;
-      }
-
-      const groupIds = (memberships || []).map(m => m.group_id);
-      if (!groupIds.length) { myGroups = []; setupGroupRealtime(); return; }
-
-      const { data: groups } = await supabaseClient
-        .from('groups')
-        .select('*')
-        .in('id', groupIds);
-
-      const { data: allMembers } = await supabaseClient
-        .from('group_members')
-        .select('group_id, user_id')
-        .in('group_id', groupIds);
-
-      const memberIds = Array.from(new Set((allMembers || []).map(m => m.user_id)));
-      const { data: memberProfiles } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .in('id', memberIds.length ? memberIds : ['00000000-0000-0000-0000-000000000000']);
-
-      myGroups = (groups || []).map(g => {
-        const memberUserIds = (allMembers || []).filter(m => m.group_id === g.id).map(m => m.user_id);
-        const members = memberUserIds.map(uid => (memberProfiles || []).find(p => p.id === uid)).filter(Boolean);
-        return { ...g, members };
-      });
-
-      setupGroupRealtime();
-    } catch (e) {
-      console.error('Load groups error:', e);
-      myGroups = [];
-    }
-  }
-
-  function setupGroupRealtime() {
-    // Tear down channels for groups we're no longer in, then subscribe to all current ones.
-    Object.keys(groupChannels).forEach(gid => {
-      if (!myGroups.find(g => g.id === gid)) {
-        supabaseClient.removeChannel(groupChannels[gid]);
-        delete groupChannels[gid];
-      }
-    });
-    myGroups.forEach(g => {
-      if (groupChannels[g.id]) return;
-      const ch = supabaseClient
-        .channel('group-' + g.id)
-        .on('broadcast', { event: 'new-message' }, (payload) => {
-          const msg = payload.payload;
-          if (!msg) return;
-          if (currentChat?.isGroup && currentChat.group.id === g.id) {
-            if (!currentChat.messages) currentChat.messages = [];
-            if (!currentChat.messages.find(m => m.id === msg.id)) {
-              currentChat.messages.push(msg);
-              displayMessages();
-            }
-          } else {
-            loadChats();
-          }
-        })
-        .subscribe();
-      groupChannels[g.id] = ch;
-    });
-  }
-
-  function teardownGroupRealtime() {
-    Object.values(groupChannels).forEach(ch => { try { supabaseClient.removeChannel(ch); } catch (e) {} });
-    Object.keys(groupChannels).forEach(k => delete groupChannels[k]);
-  }
-
-  // ============================================
-  // NEW GROUP — pick members
-  // ============================================
-  let groupCreateSelected = new Map(); // id -> profile
-  let groupCreateCandidates = [];
-
-  async function openGroupCreator() {
-    groupCreateSelected = new Map();
-    go('screen-group-create');
-    renderSelectedChips('group-selected-chips', groupCreateSelected, toggleGroupCreateMember);
-    const input = document.getElementById('group-member-search');
-    if (input) { input.value = ''; input.focus(); }
-    await loadGroupCandidates('');
-  }
-
-  function closeGroupCreator() {
-    back('screen-chats');
-  }
-
-  async function loadGroupCandidates(term) {
-    const container = document.getElementById('group-candidates-list');
-    if (!container || !currentUser) return;
-    try {
-      let query = supabaseClient.from('profiles').select('*').neq('id', currentUser.id).limit(30);
-      if (term && term.trim()) query = query.ilike('username', `%${term.trim()}%`);
-      const { data: users } = await query;
-      groupCreateCandidates = users || [];
-      renderGroupCandidateList(container, groupCreateCandidates, groupCreateSelected, toggleGroupCreateMember);
-    } catch (e) {
-      console.error('Load candidates error:', e);
-    }
-  }
-
-  function renderGroupCandidateList(container, users, selectedMap, toggleFn) {
-    if (!users.length) {
-      container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-users"></i><h3>No People Found</h3><p>Try a different search</p></div>`;
-      return;
-    }
-    container.innerHTML = '';
-    users.forEach(u => {
-      const isChecked = selectedMap.has(u.id);
-      const row = document.createElement('div');
-      row.className = 'member-row';
-      row.innerHTML = `
-        <div class="avatar-placeholder" style="width:42px;height:42px;font-size:16px;">${escapeHtml((u.name || 'U').charAt(0).toUpperCase())}</div>
-        <div class="info"><div class="name">${escapeHtml(u.name)}</div><div class="sub">@${escapeHtml(u.username)}</div></div>
-        <div class="member-check ${isChecked ? 'checked' : ''}"><i class="fa-solid fa-check"></i></div>
-      `;
-      row.addEventListener('click', () => toggleFn(u, row));
-      container.appendChild(row);
-    });
-  }
-
-  function toggleGroupCreateMember(user, rowEl) {
-    if (groupCreateSelected.has(user.id)) groupCreateSelected.delete(user.id);
-    else groupCreateSelected.set(user.id, user);
-    if (rowEl) rowEl.querySelector('.member-check')?.classList.toggle('checked');
-    renderSelectedChips('group-selected-chips', groupCreateSelected, toggleGroupCreateMember);
-  }
-
-  function renderSelectedChips(containerId, selectedMap, toggleFn) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (!selectedMap.size) { el.innerHTML = ''; return; }
-    el.innerHTML = '';
-    selectedMap.forEach(u => {
-      const chip = document.createElement('div');
-      chip.className = 'selected-chip';
-      chip.innerHTML = `<span class="mini-avatar">${escapeHtml((u.name || 'U').charAt(0).toUpperCase())}</span>${escapeHtml(u.name)}<span class="x">✕</span>`;
-      chip.querySelector('.x').onclick = () => toggleFn(u, null);
-      el.appendChild(chip);
-    });
-  }
-
-  function showGroupNameStep() {
-    if (!groupCreateSelected.size) {
-      showToast('Add at least one person to the group', 'error');
-      return;
-    }
-    const label = document.getElementById('group-member-count-label');
-    if (label) label.textContent = `${groupCreateSelected.size} member${groupCreateSelected.size > 1 ? 's' : ''} selected`;
-    go('screen-group-name');
-    setTimeout(() => document.getElementById('group-name-input')?.focus(), 100);
-  }
-
-  async function createGroup() {
-    const input = document.getElementById('group-name-input');
-    const errorEl = document.getElementById('group-name-error');
-    const name = input?.value.trim();
-
-    if (!name) { if (errorEl) errorEl.textContent = 'Please give your group a name'; return; }
-    if (!groupCreateSelected.size) { if (errorEl) errorEl.textContent = 'Add at least one member'; return; }
-
-    const btn = document.getElementById('group-create-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...'; }
-
-    try {
-      const { data: newGroup, error: gErr } = await supabaseClient
-        .from('groups')
-        .insert([{ name, created_by: currentUser.id, created_at: new Date().toISOString() }])
-        .select()
-        .single();
-
-      if (gErr) throw gErr;
-
-      const memberRows = [{ group_id: newGroup.id, user_id: currentUser.id }];
-      groupCreateSelected.forEach(u => memberRows.push({ group_id: newGroup.id, user_id: u.id }));
-
-      const { error: mErr } = await supabaseClient.from('group_members').insert(memberRows);
-      if (mErr) throw mErr;
-
-      showToast('Group "' + name + '" created 🎉', 'success');
-      await loadMyGroups();
-      loadChats();
-
-      const created = myGroups.find(g => g.id === newGroup.id) || { ...newGroup, members: [currentUser, ...Array.from(groupCreateSelected.values())] };
-      openGroupChat(created);
-    } catch (error) {
-      console.error('Create group error:', error);
-      const code = error?.code;
-      let msg = 'Failed to create group. Check the browser console for the exact Supabase error.';
-      if (code === '42P01') {
-        msg = 'The "groups"/"group_members" tables don\'t exist yet — run the SQL at the top of the <script> tag in Supabase.';
-      } else if (code === '22P02') {
-        msg = 'Column type mismatch — make sure created_by/user_id are TEXT columns, not uuid (see the SQL comment).';
-      } else if (code === '42501' || /row-level security/i.test(error?.message || '')) {
-        msg = 'Blocked by Row Level Security — disable RLS on groups/group_members, or add an insert/select policy.';
-      } else if (error?.message) {
-        msg = error.message;
-      }
-      if (errorEl) errorEl.textContent = msg;
-      showToast(msg, 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Create Group'; }
-    }
-  }
-
-  // ============================================
-  // GROUP CHAT — open / info / add members / leave
-  // ============================================
-  async function openGroupChat(group) {
-    const memberMap = {};
-    (group.members || []).forEach(m => { memberMap[m.id] = m; });
-
-    let messages = [];
-    try {
-      const { data } = await supabaseClient
-        .from('messages')
-        .select('*')
-        .eq('group_id', group.id)
-        .order('created_at');
-      messages = data || [];
-    } catch (e) { console.error('Load group messages error:', e); }
-
-    currentChat = { isGroup: true, group, messages, memberMap };
-
-    const nameEl = document.getElementById('chat-name');
-    const avatarEl = document.getElementById('chat-avatar');
-    const statusEl = document.getElementById('chat-status');
-    const dotEl = document.getElementById('chat-online-dot');
-    if (nameEl) nameEl.textContent = group.name;
-    if (avatarEl) {
-      avatarEl.classList.add('group-avatar');
-      avatarEl.innerHTML = '<i class="fa-solid fa-user-group"></i>';
-    }
-    if (statusEl) { statusEl.textContent = `${(group.members || []).length} members`; statusEl.style.color = 'var(--text-faint)'; }
-    if (dotEl) dotEl.style.display = 'none';
-
-    go('screen-chat');
-    teardownTypingChannel();
-    hideToneBanner();
-    document.getElementById('quick-replies').style.display = 'none';
-    displayMessages();
-    setTimeout(() => document.getElementById('message-input')?.focus(), 300);
-  }
-
-  function openChatInfo() {
-    if (!currentChat?.isGroup) return;
-    renderGroupInfo();
-    go('screen-group-info');
-  }
-
-  function renderGroupInfo() {
-    const group = currentChat.group;
-    const nameEl = document.getElementById('group-info-name');
-    const subEl = document.getElementById('group-info-sub');
-    const listEl = document.getElementById('group-members-list');
-    const headingEl = document.getElementById('group-members-heading');
-    if (nameEl) nameEl.textContent = group.name;
-    const count = (group.members || []).length;
-    if (subEl) subEl.textContent = `Group • ${count} member${count === 1 ? '' : 's'}`;
-    if (headingEl) headingEl.textContent = `${count} MEMBER${count === 1 ? '' : 'S'}`;
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    (group.members || []).forEach(m => {
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.style.cursor = 'default';
-      row.innerHTML = `
-        <div class="avatar-wrap">
-          <div class="avatar-placeholder" style="width:44px;height:44px;font-size:16px;">${escapeHtml((m.name || 'U').charAt(0).toUpperCase())}</div>
-        </div>
-        <div class="info">
-          <div class="name">${escapeHtml(m.name)}${m.id === group.created_by ? ' <span style="color:var(--text-faint); font-weight:500; font-size:11.5px;">(Admin)</span>' : ''}${m.id === currentUser.id ? ' <span style="color:var(--accent); font-weight:600; font-size:11.5px;">(You)</span>' : ''}</div>
-          <div class="preview">@${escapeHtml(m.username)}</div>
-        </div>
-      `;
-      listEl.appendChild(row);
-    });
-  }
-
-  let addMemberSelected = new Map();
-
-  async function openAddMembers() {
-    addMemberSelected = new Map();
-    go('screen-group-add-members');
-    renderSelectedChips('add-member-chips', addMemberSelected, toggleAddMember);
-    const input = document.getElementById('add-member-search');
-    if (input) { input.value = ''; input.focus(); }
-    await loadAddMemberCandidates('');
-  }
-
-  async function loadAddMemberCandidates(term) {
-    const container = document.getElementById('add-member-candidates-list');
-    if (!container || !currentChat?.isGroup) return;
-    const existingIds = new Set((currentChat.group.members || []).map(m => m.id));
-    try {
-      let query = supabaseClient.from('profiles').select('*').neq('id', currentUser.id).limit(30);
-      if (term && term.trim()) query = query.ilike('username', `%${term.trim()}%`);
-      const { data: users } = await query;
-      const filtered = (users || []).filter(u => !existingIds.has(u.id));
-      renderGroupCandidateList(container, filtered, addMemberSelected, toggleAddMember);
-    } catch (e) {
-      console.error('Load add-member candidates error:', e);
-    }
-  }
-
-  function toggleAddMember(user, rowEl) {
-    if (addMemberSelected.has(user.id)) addMemberSelected.delete(user.id);
-    else addMemberSelected.set(user.id, user);
-    if (rowEl) rowEl.querySelector('.member-check')?.classList.toggle('checked');
-    renderSelectedChips('add-member-chips', addMemberSelected, toggleAddMember);
-  }
-
-  async function confirmAddMembers() {
-    if (!currentChat?.isGroup || !addMemberSelected.size) {
-      showToast('Select at least one person to add', 'error');
-      return;
-    }
-    const btn = document.getElementById('add-members-confirm-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...'; }
-    try {
-      const rows = Array.from(addMemberSelected.values()).map(u => ({ group_id: currentChat.group.id, user_id: u.id }));
-      const { error } = await supabaseClient.from('group_members').insert(rows);
-      if (error) throw error;
-
-      currentChat.group.members = [...currentChat.group.members, ...Array.from(addMemberSelected.values())];
-      addMemberSelected.forEach(u => { currentChat.memberMap[u.id] = u; });
-
-      await loadMyGroups();
-      const refreshed = myGroups.find(g => g.id === currentChat.group.id);
-      if (refreshed) currentChat.group = refreshed;
-
-      showToast('Members added ✓', 'success');
-      back('screen-group-info');
-      renderGroupInfo();
-      const statusEl = document.getElementById('chat-status');
-      if (statusEl) statusEl.textContent = `${(currentChat.group.members || []).length} members`;
-    } catch (error) {
-      console.error('Add members error:', error);
-      showToast('Failed to add members', 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Add to Group'; }
-    }
-  }
-
-  async function leaveGroup() {
-    if (!currentChat?.isGroup) return;
-    showModal(`
-      <div class="modal">
-        <h3>Leave Group</h3>
-        <p>Are you sure you want to leave "${escapeHtml(currentChat.group.name)}"?</p>
-        <div class="modal-btns">
-          <button class="cancel-btn close-modal">Cancel</button>
-          <button class="danger-btn" onclick="confirmLeaveGroup()">Leave</button>
-        </div>
-      </div>
-    `);
-  }
-
-  async function confirmLeaveGroup() {
-    if (!currentChat?.isGroup) return;
-    try {
-      const { error } = await supabaseClient
-        .from('group_members')
-        .delete()
-        .eq('group_id', currentChat.group.id)
-        .eq('user_id', currentUser.id);
-      if (error) throw error;
-      document.querySelector('.modal-overlay')?.remove();
-      showToast('You left the group', 'success');
-      currentChat = null;
-      await loadMyGroups();
-      historyStack.length = 0;
-      historyStack.push('screen-chats');
-      go('screen-chats');
-      loadChats();
-    } catch (e) {
-      console.error('Leave group error:', e);
-      showToast('Failed to leave group', 'error');
-    }
-  }
-
-  // ============================================
-  // CHAT FUNCTIONS (direct messages + groups combined list)
+  // CHAT FUNCTIONS
   // ============================================
   async function loadChats() {
     if (!currentUser) return;
@@ -1800,7 +1118,6 @@
         .from('messages')
         .select('*')
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-        .is('group_id', null)
         .order('created_at', { ascending: true });
 
       const partnerIds = new Set();
@@ -1809,12 +1126,21 @@
         if (m.receiver_id !== currentUser.id) partnerIds.add(m.receiver_id);
       });
 
-      const { data: partners } = partnerIds.size ? await supabaseClient
+      if (partnerIds.size === 0) {
+        container.innerHTML = `<div class="empty-state" style="padding-top:80px;">
+          <i class="fa-regular fa-comment-dots"></i>
+          <h3>No Messages Yet</h3>
+          <p>Search for friends to start chatting!</p>
+        </div>`;
+        return;
+      }
+
+      const { data: partners } = await supabaseClient
         .from('profiles')
         .select('*')
-        .in('id', Array.from(partnerIds)) : { data: [] };
+        .in('id', Array.from(partnerIds));
 
-      const dmChats = Array.from(partnerIds).map(pid => {
+      const chats = Array.from(partnerIds).map(pid => {
         const partner = (partners || []).find(p => p.id === pid);
         const msgs = (messages || []).filter(m =>
           (m.sender_id === currentUser.id && m.receiver_id === pid) ||
@@ -1822,79 +1148,30 @@
         );
         const last = msgs[msgs.length - 1];
         const unread = msgs.filter(m => m.receiver_id === currentUser.id && m.status !== 'read').length;
-        return { isGroup: false, partner, messages: msgs, last_message: last, unread_count: unread, sort_ts: last ? new Date(last.created_at).getTime() : 0 };
-      }).filter(c => c.partner);
-
-      let groupChats = [];
-      if (myGroups.length) {
-        const groupIds = myGroups.map(g => g.id);
-        const { data: groupMsgs } = await supabaseClient
-          .from('messages')
-          .select('*')
-          .in('group_id', groupIds)
-          .order('created_at', { ascending: true });
-
-        groupChats = myGroups.map(g => {
-          const msgs = (groupMsgs || []).filter(m => m.group_id === g.id);
-          const last = msgs[msgs.length - 1];
-          return { isGroup: true, group: g, last_message: last, sort_ts: last ? new Date(last.created_at).getTime() : (g.created_at ? new Date(g.created_at).getTime() : 0) };
-        });
-      }
-
-      const allChats = [...dmChats, ...groupChats].sort((a, b) => b.sort_ts - a.sort_ts);
-
-      if (!allChats.length) {
-        container.innerHTML = `<div class="empty-state" style="padding-top:80px;">
-          <i class="fa-regular fa-comment-dots"></i>
-          <h3>No Messages Yet</h3>
-          <p>Search for friends or start a group to begin chatting!</p>
-        </div>`;
-        return;
-      }
+        return { partner, messages: msgs, last_message: last, unread_count: unread };
+      }).sort((a, b) => (b.last_message ? new Date(b.last_message.created_at) : 0) - (a.last_message ? new Date(a.last_message.created_at) : 0));
 
       container.innerHTML = '';
-      allChats.forEach(chat => {
+      chats.forEach(chat => {
+        if (!chat.partner) return;
+        const lastMsg = chat.last_message;
         const div = document.createElement('div');
         div.className = 'row';
-        if (chat.isGroup) {
-          const lastMsg = chat.last_message;
-          let preview = 'No messages yet';
-          if (lastMsg) {
-            const senderName = lastMsg.sender_id === currentUser.id ? 'You' : (chat.group.members.find(m => m.id === lastMsg.sender_id)?.name || 'Someone');
-            const body = isImageContent(lastMsg.content) ? '📷 Photo' : (lastMsg.content || '').substring(0, 26);
-            preview = `${senderName}: ${body}`;
-          }
-          div.innerHTML = `
-            <div class="avatar-wrap">
-              <div class="avatar-placeholder group-avatar" style="width:52px;height:52px;font-size:20px;"><i class="fa-solid fa-user-group"></i></div>
-            </div>
-            <div class="info">
-              <div class="name">${escapeHtml(chat.group.name)}</div>
-              <div class="preview">${escapeHtml(preview)}</div>
-            </div>
-            <div class="meta">
-              <span class="time">${lastMsg ? formatTime(lastMsg.created_at) : ''}</span>
-            </div>
-          `;
-          div.addEventListener('click', () => openGroupChat(chat.group));
-        } else {
-          const lastMsg = chat.last_message;
-          div.innerHTML = `
-            <div class="avatar-wrap">
-              <div class="avatar-placeholder" style="width:52px;height:52px;font-size:20px;">${escapeHtml(chat.partner.name.charAt(0).toUpperCase())}</div>
-              ${chat.partner.is_online ? '<span class="dot-online"></span>' : ''}
-            </div>
-            <div class="info">
-              <div class="name">${escapeHtml(chat.partner.name)}</div>
-              <div class="preview">@${escapeHtml(chat.partner.username)} • ${lastMsg ? (isImageContent(lastMsg.content) ? '📷 Photo' : (lastMsg.content || 'Say Hi! 👋').substring(0, 30)) : 'Say Hi! 👋'}</div>
-            </div>
-            <div class="meta">
-              <span class="time">${lastMsg ? formatTime(lastMsg.created_at) : ''}</span>
-              ${chat.unread_count > 0 ? `<span class="badge">${chat.unread_count}</span>` : ''}
-            </div>
-          `;
-          div.addEventListener('click', () => openChat(chat));
-        }
+        div.innerHTML = `
+          <div class="avatar-wrap">
+            <div class="avatar-placeholder" style="width:52px;height:52px;font-size:20px;">${chat.partner.name.charAt(0).toUpperCase()}</div>
+            ${chat.partner.is_online ? '<span class="dot-online"></span>' : ''}
+          </div>
+          <div class="info">
+            <div class="name">${escapeHtml(chat.partner.name)}</div>
+            <div class="preview">@${escapeHtml(chat.partner.username)} • ${lastMsg ? (lastMsg.content || 'Say Hi! 👋').substring(0, 30) : 'Say Hi! 👋'}</div>
+          </div>
+          <div class="meta">
+            <span class="time">${lastMsg ? formatTime(lastMsg.created_at) : ''}</span>
+            ${chat.unread_count > 0 ? `<span class="badge">${chat.unread_count}</span>` : ''}
+          </div>
+        `;
+        div.addEventListener('click', () => openChat(chat));
         container.appendChild(div);
       });
     } catch (e) {
@@ -1903,10 +1180,9 @@
   }
 
   async function openChat(chat) {
-    currentChat = { isGroup: false, partner: chat.partner, messages: chat.messages };
+    currentChat = chat;
     const nameEl = document.getElementById('chat-name');
     const avatarEl = document.getElementById('chat-avatar');
-    if (avatarEl) avatarEl.classList.remove('group-avatar');
     if (nameEl) nameEl.textContent = chat.partner?.name || 'User';
     if (avatarEl) avatarEl.textContent = (chat.partner?.name || 'U').charAt(0).toUpperCase();
 
@@ -1936,7 +1212,7 @@
     if (!currentChat?.messages?.length) {
       container.innerHTML = `<div class="empty-state" style="padding-top:60px;">
         <i class="fa-regular fa-comments"></i>
-        <h3>${currentChat?.isGroup ? 'Say hi to the group' : 'Start a conversation'}</h3>
+        <h3>Start a conversation</h3>
         <p>Say Hi! 👋</p>
       </div>`;
       return;
@@ -1967,15 +1243,10 @@
     const content = msg.content || '';
     const isImage = isImageContent(content);
 
-    if (!isSent) {
+    if (!isSent && currentChat?.partner) {
       const label = document.createElement('span');
       label.className = 'username-label';
-      if (currentChat?.isGroup) {
-        const sender = currentChat.memberMap[msg.sender_id];
-        label.textContent = sender ? (sender.name || '@' + sender.username) : 'Unknown';
-      } else if (currentChat?.partner) {
-        label.textContent = '@' + currentChat.partner.username;
-      }
+      label.textContent = '@' + currentChat.partner.username;
       div.appendChild(label);
     }
 
@@ -2032,50 +1303,25 @@
     if (qr) qr.style.display = 'none';
 
     try {
-      if (currentChat.isGroup) {
-        const { data: newMsg, error } = await supabaseClient
-          .from('messages')
-          .insert([{
-            sender_id: currentUser.id,
-            receiver_id: null,
-            group_id: currentChat.group.id,
-            content: content,
-            created_at: new Date().toISOString(),
-            status: 'sent'
-          }])
-          .select()
-          .single();
+      const { data: newMsg, error } = await supabaseClient
+        .from('messages')
+        .insert([{
+          sender_id: currentUser.id,
+          receiver_id: currentChat.partner.id,
+          content: content,
+          created_at: new Date().toISOString(),
+          status: 'sent'
+        }])
+        .select()
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (!currentChat.messages) currentChat.messages = [];
-        currentChat.messages.push(newMsg);
-        displayMessages();
+      if (!currentChat.messages) currentChat.messages = [];
+      currentChat.messages.push(newMsg);
+      displayMessages();
 
-        const ch = groupChannels[currentChat.group.id];
-        if (ch) ch.send({ type: 'broadcast', event: 'new-message', payload: newMsg });
-        loadChats();
-      } else {
-        const { data: newMsg, error } = await supabaseClient
-          .from('messages')
-          .insert([{
-            sender_id: currentUser.id,
-            receiver_id: currentChat.partner.id,
-            content: content,
-            created_at: new Date().toISOString(),
-            status: 'sent'
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        if (!currentChat.messages) currentChat.messages = [];
-        currentChat.messages.push(newMsg);
-        displayMessages();
-
-        loadChats();
-      }
+      loadChats();
     } catch (e) {
       console.error('Send error:', e);
       showToast('Send failed', 'error');
@@ -2284,31 +1530,24 @@
 
       reader.onload = async function() {
         const base64Data = reader.result;
-        const isGroup = !!currentChat.isGroup;
 
-        const insertRow = isGroup
-          ? { sender_id: currentUser.id, receiver_id: null, group_id: currentChat.group.id, content: base64Data, created_at: new Date().toISOString(), status: 'sent' }
-          : { sender_id: currentUser.id, receiver_id: currentChat.partner.id, content: base64Data, created_at: new Date().toISOString(), status: 'sent' };
-
-        const { data: inserted, error } = await supabaseClient.from('messages').insert([insertRow]).select().single();
+        const { error } = await supabaseClient.from('messages').insert([{
+          sender_id: currentUser.id,
+          receiver_id: currentChat.partner.id,
+          content: base64Data,
+          created_at: new Date().toISOString(),
+          status: 'sent'
+        }]);
 
         if (error) throw error;
 
-        if (isGroup) {
-          if (!currentChat.messages) currentChat.messages = [];
-          currentChat.messages.push(inserted);
-          const ch = groupChannels[currentChat.group.id];
-          if (ch) ch.send({ type: 'broadcast', event: 'new-message', payload: inserted });
-        } else {
-          const { data: msgs } = await supabaseClient
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChat.partner.id}),and(sender_id.eq.${currentChat.partner.id},receiver_id.eq.${currentUser.id})`)
-            .is('group_id', null)
-            .order('created_at');
-          currentChat.messages = msgs || [];
-        }
+        const { data: msgs } = await supabaseClient
+          .from('messages')
+          .select('*')
+          .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChat.partner.id}),and(sender_id.eq.${currentChat.partner.id},receiver_id.eq.${currentUser.id})`)
+          .order('created_at');
 
+        currentChat.messages = msgs || [];
         displayMessages();
         go('screen-chat');
         showToast('Image shared! 🖼️', 'success');
@@ -2326,7 +1565,7 @@
   }
 
   // ============================================
-  // REALTIME SUBSCRIPTIONS (direct messages)
+  // REALTIME SUBSCRIPTIONS
   // ============================================
   function setupRealtimeSubscriptions() {
     if (!currentUser) return;
@@ -2343,8 +1582,7 @@
           filter: `receiver_id=eq.${currentUser.id}`
         },
         async (payload) => {
-          if (payload.new.group_id) return; // group messages arrive via broadcast instead
-          if (currentChat && !currentChat.isGroup && payload.new.sender_id === currentChat.partner?.id) {
+          if (currentChat && payload.new.sender_id === currentChat.partner?.id) {
             if (!currentChat.messages) currentChat.messages = [];
             currentChat.messages.push(payload.new);
             displayMessages();
@@ -2384,7 +1622,6 @@
     try {
       if (activeCall) endCall();
       teardownCallSignaling();
-      teardownGroupRealtime();
       if (currentUser) {
         await supabaseClient.from('profiles').update({
           is_online: false,
@@ -2403,7 +1640,6 @@
   function handleLogoutComplete() {
     currentUser = null;
     currentChat = null;
-    myGroups = [];
     isSigningIn = false;
     window._pendingUser = null;
     historyStack.length = 0;
@@ -2422,9 +1658,6 @@
   // ============================================
   // EVENT LISTENERS
   // ============================================
-  let groupSearchDebounce = null;
-  let addMemberSearchDebounce = null;
-
   function setupEventListeners() {
     document.querySelectorAll('.navitem[data-screen]').forEach(item => {
       item.addEventListener('click', () => { go(item.dataset.screen); });
@@ -2448,27 +1681,6 @@
         if (e.key === 'Enter') sendMessage();
       });
       messageInput.addEventListener('input', handleComposerInput);
-    }
-
-    const groupMemberSearch = document.getElementById('group-member-search');
-    if (groupMemberSearch) {
-      groupMemberSearch.addEventListener('input', () => {
-        clearTimeout(groupSearchDebounce);
-        groupSearchDebounce = setTimeout(() => loadGroupCandidates(groupMemberSearch.value), 250);
-      });
-    }
-
-    const groupNameInput = document.getElementById('group-name-input');
-    if (groupNameInput) {
-      groupNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') createGroup(); });
-    }
-
-    const addMemberSearch = document.getElementById('add-member-search');
-    if (addMemberSearch) {
-      addMemberSearch.addEventListener('input', () => {
-        clearTimeout(addMemberSearchDebounce);
-        addMemberSearchDebounce = setTimeout(() => loadAddMemberCandidates(addMemberSearch.value), 250);
-      });
     }
   }
 
@@ -2658,7 +1870,7 @@
   // ============================================
   async function maybeShowSmartReplies() {
     const container = document.getElementById('quick-replies');
-    if (!container || currentChat?.isGroup || !currentChat?.messages?.length) { if (container) container.style.display = 'none'; return; }
+    if (!container || !currentChat?.messages?.length) { if (container) container.style.display = 'none'; return; }
 
     const last = currentChat.messages[currentChat.messages.length - 1];
     if (!last || last.sender_id === currentUser.id || isImageContent(last.content)) {
@@ -2717,10 +1929,7 @@
     try {
       const recent = currentChat.messages.slice(-30).filter(m => !isImageContent(m.content));
       const transcript = recent.map(m => {
-        let who;
-        if (m.sender_id === currentUser.id) who = 'Me';
-        else if (currentChat.isGroup) who = currentChat.memberMap[m.sender_id]?.name || 'Someone';
-        else who = currentChat.partner?.name || 'Them';
+        const who = m.sender_id === currentUser.id ? 'Me' : (currentChat.partner?.name || 'Them');
         return `${who}: ${m.content}`;
       }).join('\n');
 
@@ -2787,7 +1996,7 @@
   }
 
   function setupTypingChannel() {
-    if (!currentUser || currentChat?.isGroup || !currentChat?.partner) return;
+    if (!currentUser || !currentChat?.partner) return;
     teardownTypingChannel();
     const name = typingChannelName(currentUser.id, currentChat.partner.id);
     typingChannel = supabaseClient
@@ -2817,11 +2026,6 @@
   function updateChatStatusDisplay() {
     const statusEl = document.getElementById('chat-status');
     if (!statusEl || !currentChat) return;
-    if (currentChat.isGroup) {
-      statusEl.textContent = `${(currentChat.group.members || []).length} members`;
-      statusEl.style.color = 'var(--text-faint)';
-      return;
-    }
     if (partnerIsTyping) {
       statusEl.innerHTML = 'typing<span class="typing-dots"><span></span><span></span><span></span></span>';
       statusEl.style.color = 'var(--accent)';
@@ -2900,12 +2104,15 @@
   }
 
   // ============================================
-  // 8) AUDIO / VIDEO CALLING (WebRTC + Supabase Realtime signaling)
-  // WhatsApp-style call screens: dark patterned background for audio calls,
-  // full-bleed remote video for video calls, small local preview pinned
-  // bottom-right, top bar with encryption note + add-person, bottom row of
-  // round controls (speaker / video / mute / end).
+  // 8) AUDIO / VIDEO CALLING (WebRTC + Supabase Realtime signaling — no server needed)
   // ============================================
+  // Signaling design: every logged-in user keeps one persistent broadcast
+  // channel open, named "user-<their id>". To reach someone, you join a
+  // channel with THEIR name and send on it — no DB writes, nothing to clean
+  // up server-side. Uses free public STUN only (no TURN), so it works great
+  // on most home/mobile networks but can fail to connect on some locked-down
+  // corporate/school networks — there's no free reliable TURN relay, that
+  // would need a paid service (e.g. Twilio, Cloudflare Calls, metered.ca).
   const ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
@@ -2917,7 +2124,6 @@
   let myCallChannel = null;
   let activeCall = null;
   let callAudioCtx = null;
-  let isSpeakerOn = true;
 
   function setupCallSignaling() {
     if (!currentUser) return;
@@ -2970,8 +2176,6 @@
       case 'reject': handleRemoteReject(data); break;
       case 'busy': handleRemoteBusy(data); break;
       case 'cancel': handleRemoteCancel(data); break;
-      case 'upgrade-offer': handleUpgradeOffer(data); break;
-      case 'upgrade-answer': handleUpgradeAnswer(data); break;
     }
   }
 
@@ -2994,9 +2198,7 @@
         videoEl.play().catch(() => {});
       }
       const hasVideo = e.streams[0].getVideoTracks().length > 0;
-      if (hasVideo && activeCall) activeCall.callType = 'video';
       document.getElementById('call-screen')?.classList.toggle('video-mode', hasVideo || activeCall?.callType === 'video');
-      updateVideoToggleIcon();
     };
 
     pc.onconnectionstatechange = () => {
@@ -3035,7 +2237,6 @@
   async function startVideoCall() { return startCall('video'); }
 
   async function startCall(callType) {
-    if (currentChat?.isGroup) { showToast('Group calling is coming soon', 'success'); return; }
     if (!currentChat?.partner) return;
     if (activeCall) { showToast('You\'re already on a call', 'error'); return; }
     if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) {
@@ -3220,80 +2421,6 @@
     cleanupCall();
   }
 
-  // ----- Mid-call upgrade: audio → video (tap the video icon on an audio call) -----
-  async function handleVideoToggleBtn() {
-    if (!activeCall) return;
-    if (activeCall.callType !== 'video') {
-      await upgradeToVideo();
-    } else {
-      toggleCallCamera();
-    }
-  }
-
-  async function upgradeToVideo() {
-    if (!activeCall || activeCall.callType === 'video') return;
-    try {
-      const camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: activeCall.facingMode || 'user' } });
-      const track = camStream.getVideoTracks()[0];
-      if (!track) return;
-
-      activeCall.localStream.addTrack(track);
-      activeCall.pc.addTrack(track, activeCall.localStream);
-      activeCall.callType = 'video';
-
-      const offer = await activeCall.pc.createOffer();
-      await activeCall.pc.setLocalDescription(offer);
-      sendToCallChannel(activeCall.peerChannel, { type: 'upgrade-offer', callId: activeCall.callId, from: currentUser.id, sdp: offer });
-
-      const screenEl = document.getElementById('call-screen');
-      screenEl?.classList.add('video-mode');
-      const localVideoEl = document.getElementById('call-local-video');
-      if (localVideoEl) localVideoEl.srcObject = activeCall.localStream;
-      document.getElementById('call-local-video-wrap')?.classList.remove('camera-off');
-      updateVideoToggleIcon();
-      showToast('Camera turned on', 'success');
-    } catch (e) {
-      console.error('Upgrade to video error:', e);
-      showToast('Couldn\'t turn on your camera', 'error');
-    }
-  }
-
-  async function handleUpgradeOffer(data) {
-    if (!activeCall || activeCall.callId !== data.callId || !activeCall.pc) return;
-    try {
-      await activeCall.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
-      const answer = await activeCall.pc.createAnswer();
-      await activeCall.pc.setLocalDescription(answer);
-      sendToCallChannel(activeCall.peerChannel, { type: 'upgrade-answer', callId: activeCall.callId, from: currentUser.id, sdp: answer });
-    } catch (e) {
-      console.error('Handle upgrade offer error:', e);
-    }
-  }
-
-  async function handleUpgradeAnswer(data) {
-    if (!activeCall || activeCall.callId !== data.callId || !activeCall.pc) return;
-    try {
-      await activeCall.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
-    } catch (e) {
-      console.error('Handle upgrade answer error:', e);
-    }
-  }
-
-  function updateVideoToggleIcon() {
-    const icon = document.getElementById('call-video-toggle-icon');
-    const btn = document.getElementById('call-video-toggle-btn');
-    if (!icon || !activeCall) return;
-    if (activeCall.callType === 'video') {
-      icon.className = activeCall.isCameraOff ? 'fa-solid fa-video-slash' : 'fa-solid fa-video';
-      btn?.classList.toggle('active', activeCall.isCameraOff);
-      btn?.setAttribute('title', 'Toggle camera');
-    } else {
-      icon.className = 'fa-solid fa-video';
-      btn?.classList.remove('active');
-      btn?.setAttribute('title', 'Turn on video');
-    }
-  }
-
   function onCallConnected() {
     if (!activeCall) return;
     activeCall.status = 'connected';
@@ -3338,10 +2465,6 @@
     hideCallScreen();
   }
 
-  function minimizeCallHint() {
-    showToast('Tap the red button to end the call', 'success');
-  }
-
   function toggleCallMute() {
     if (!activeCall?.localStream) return;
     activeCall.isMuted = !activeCall.isMuted;
@@ -3351,38 +2474,15 @@
     if (icon) icon.className = activeCall.isMuted ? 'fa-solid fa-microphone-slash' : 'fa-solid fa-microphone';
   }
 
-  // Speaker toggle — uses setSinkId() where supported (most desktop Chromium
-  // browsers); on devices without sink control (most mobile browsers) this
-  // just flips the icon/state, since phones route call audio to the
-  // earpiece/speaker at the OS level and the web platform can't force that.
-  async function toggleCallSpeaker() {
-    isSpeakerOn = !isSpeakerOn;
-    const icon = document.getElementById('call-speaker-icon');
-    const btn = document.getElementById('call-speaker-btn');
-    if (icon) icon.className = isSpeakerOn ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-low';
-    btn?.classList.toggle('active', isSpeakerOn);
-
-    const videoEl = document.getElementById('call-remote-video');
-    if (videoEl && typeof videoEl.setSinkId === 'function') {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const speaker = devices.find(d => d.kind === 'audiooutput' && /speaker/i.test(d.label));
-        const earpiece = devices.find(d => d.kind === 'audiooutput' && /earpiece|default/i.test(d.label));
-        const target = isSpeakerOn ? (speaker || null) : (earpiece || null);
-        if (target) await videoEl.setSinkId(target.deviceId);
-      } catch (e) {
-        // Not supported on this device — cosmetic toggle only.
-      }
-    }
-  }
-
   function toggleCallCamera() {
     if (!activeCall?.localStream || activeCall.callType !== 'video') return;
     const videoTracks = activeCall.localStream.getVideoTracks();
     if (!videoTracks.length) return;
     activeCall.isCameraOff = !activeCall.isCameraOff;
     videoTracks.forEach(t => t.enabled = !activeCall.isCameraOff);
-    updateVideoToggleIcon();
+    document.getElementById('call-camera-btn')?.classList.toggle('active', activeCall.isCameraOff);
+    const icon = document.getElementById('call-camera-icon');
+    if (icon) icon.className = activeCall.isCameraOff ? 'fa-solid fa-video-slash' : 'fa-solid fa-video';
     document.getElementById('call-local-video-wrap')?.classList.toggle('camera-off', activeCall.isCameraOff);
   }
 
@@ -3424,13 +2524,15 @@
     const nameEl = document.getElementById('call-peer-name');
     const avatarEl = document.getElementById('call-avatar');
     if (nameEl) nameEl.textContent = activeCall.peerName;
-    if (avatarEl) { avatarEl.classList.remove('group-avatar'); avatarEl.textContent = (activeCall.peerName || 'U').charAt(0).toUpperCase(); }
+    if (avatarEl) avatarEl.textContent = (activeCall.peerName || 'U').charAt(0).toUpperCase();
     const acceptBtn = document.getElementById('call-accept-btn');
     if (acceptBtn) acceptBtn.style.display = 'none';
     el.classList.remove('ringing');
 
     const isVideo = activeCall.callType === 'video';
     el.classList.toggle('video-mode', isVideo);
+    const camBtn = document.getElementById('call-camera-btn');
+    if (camBtn) camBtn.style.display = isVideo ? 'flex' : 'none';
     const localVideoEl = document.getElementById('call-local-video');
     if (localVideoEl) localVideoEl.srcObject = isVideo ? activeCall.localStream : null;
     document.getElementById('call-local-video-wrap')?.classList.remove('camera-off');
@@ -3438,13 +2540,10 @@
     updateCallScreenStatus(activeCall.direction === 'outgoing'
       ? (isVideo ? 'Video calling…' : 'Calling…')
       : 'Connecting…');
-
     document.getElementById('call-mute-icon') && (document.getElementById('call-mute-icon').className = 'fa-solid fa-microphone');
     document.getElementById('call-mute-btn')?.classList.remove('active');
-    isSpeakerOn = true;
-    document.getElementById('call-speaker-icon') && (document.getElementById('call-speaker-icon').className = 'fa-solid fa-volume-high');
-    document.getElementById('call-speaker-btn')?.classList.remove('active');
-    updateVideoToggleIcon();
+    document.getElementById('call-camera-icon') && (document.getElementById('call-camera-icon').className = 'fa-solid fa-video');
+    document.getElementById('call-camera-btn')?.classList.remove('active');
     el.classList.add('active');
   }
 
@@ -3454,11 +2553,12 @@
     const nameEl = document.getElementById('call-peer-name');
     const avatarEl = document.getElementById('call-avatar');
     if (nameEl) nameEl.textContent = activeCall.peerName;
-    if (avatarEl) { avatarEl.classList.remove('group-avatar'); avatarEl.textContent = (activeCall.peerName || 'U').charAt(0).toUpperCase(); }
+    if (avatarEl) avatarEl.textContent = (activeCall.peerName || 'U').charAt(0).toUpperCase();
     const acceptBtn = document.getElementById('call-accept-btn');
     if (acceptBtn) acceptBtn.style.display = 'flex';
     el.classList.add('ringing');
     el.classList.remove('video-mode');
+    document.getElementById('call-camera-btn').style.display = 'none';
     updateCallScreenStatus(activeCall.callType === 'video' ? 'Incoming video call…' : 'Incoming call…');
     el.classList.add('active');
   }
@@ -3481,12 +2581,11 @@
     const localVideoEl = document.getElementById('call-local-video');
     if (localVideoEl) { localVideoEl.srcObject = null; localVideoEl.classList.remove('back-camera'); }
     document.getElementById('call-local-video-wrap')?.classList.remove('camera-off');
+    document.getElementById('call-camera-btn')?.style && (document.getElementById('call-camera-btn').style.display = 'none');
     document.getElementById('call-mute-icon') && (document.getElementById('call-mute-icon').className = 'fa-solid fa-microphone');
     document.getElementById('call-mute-btn')?.classList.remove('active');
-    document.getElementById('call-video-toggle-icon') && (document.getElementById('call-video-toggle-icon').className = 'fa-solid fa-video');
-    document.getElementById('call-video-toggle-btn')?.classList.remove('active');
-    document.getElementById('call-speaker-icon') && (document.getElementById('call-speaker-icon').className = 'fa-solid fa-volume-high');
-    document.getElementById('call-speaker-btn')?.classList.remove('active');
+    document.getElementById('call-camera-icon') && (document.getElementById('call-camera-icon').className = 'fa-solid fa-video');
+    document.getElementById('call-camera-btn')?.classList.remove('active');
   }
 
   // ----- Ringtone / ringback (synthesized — no audio files needed) -----
@@ -3582,21 +2681,7 @@
   window.endCall = endCall;
   window.toggleCallMute = toggleCallMute;
   window.toggleCallCamera = toggleCallCamera;
-  window.toggleCallSpeaker = toggleCallSpeaker;
-  window.handleVideoToggleBtn = handleVideoToggleBtn;
   window.switchCamera = switchCamera;
-  window.minimizeCallHint = minimizeCallHint;
-  window.openGroupCreator = openGroupCreator;
-  window.closeGroupCreator = closeGroupCreator;
-  window.showGroupNameStep = showGroupNameStep;
-  window.createGroup = createGroup;
-  window.openChatInfo = openChatInfo;
-  window.openAddMembers = openAddMembers;
-  window.confirmAddMembers = confirmAddMembers;
-  window.leaveGroup = leaveGroup;
-  window.confirmLeaveGroup = confirmLeaveGroup;
-  window.openChat = openChat;
-  window.openGroupChat = openGroupChat;
 </script>
 </body>
 </html>
