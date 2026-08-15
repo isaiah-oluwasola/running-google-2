@@ -784,25 +784,36 @@
   //
   // NEW TABLES REQUIRED FOR GROUP CHAT — run this in the Supabase SQL editor:
   //
+  //   -- NOTE: user id columns are TEXT, not uuid — profiles.id stores the
+  //   -- Firebase UID (a string like "AbC123XyZ..."), which is NOT a valid
+  //   -- Postgres uuid. Using `uuid` for these columns is what breaks group
+  //   -- creation with an "invalid input syntax for type uuid" error.
   //   create table if not exists groups (
   //     id uuid primary key default gen_random_uuid(),
   //     name text not null,
-  //     created_by uuid not null,
+  //     created_by text not null,
   //     created_at timestamptz default now()
   //   );
   //   create table if not exists group_members (
   //     id uuid primary key default gen_random_uuid(),
   //     group_id uuid references groups(id) on delete cascade,
-  //     user_id uuid not null,
+  //     user_id text not null,
   //     joined_at timestamptz default now(),
   //     unique(group_id, user_id)
   //   );
   //   alter table messages add column if not exists group_id uuid references groups(id) on delete cascade;
   //   alter table messages alter column receiver_id drop not null;
   //
-  // Also make sure RLS policies on groups/group_members allow authenticated
-  // users to select/insert rows they're a member of (or disable RLS if this
-  // project uses the anon key for everything, matching the existing tables).
+  // If you already ran the old (broken) version of this SQL with `uuid`
+  // columns, drop and recreate the two tables:
+  //   drop table if exists group_members;
+  //   drop table if exists groups;
+  //   -- then re-run the corrected block above
+  //
+  // Also make sure RLS is disabled on groups/group_members (or has
+  // permissive policies), matching however profiles/messages are set up —
+  // if RLS is ON with no policy, every insert/select silently returns
+  // "new row violates row-level security policy" or an empty result.
   // ============================================
   const SUPABASE_URL = 'https://pgjxbcsircqtkmzdafhy.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnanhiY3NpcmNxdGttemRhZmh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMTE2MTEsImV4cCI6MjEwMTY4NzYxMX0.6M-ArErI354xaMhcKXUyBbolUhfQfMmEWg_dzMpNwmI';
@@ -1015,11 +1026,52 @@
   // ============================================
   // FIREBASE AUTH (Google / Apple sign-in)
   // ============================================
+  // Checks for the two most common reasons Firebase popup/redirect auth
+  // fails silently on a static single-file app, and returns a message the
+  // person can actually act on instead of a raw Firebase error code.
+  function diagnoseAuthEnvironment() {
+    if (location.protocol === 'file:') {
+      return 'This page is open as a local file (file://). Firebase sign-in needs http:// or https:// — serve this file from a local server or host it (e.g. Netlify, Vercel, GitHub Pages) and open it from that URL.';
+    }
+    if (window.self !== window.top) {
+      return 'This looks like it\'s running inside an embedded preview/iframe, which blocks Google\'s sign-in popup. Open the file directly in its own browser tab, not inside a preview panel.';
+    }
+    return null;
+  }
+
+  function explainAuthError(error) {
+    const envIssue = diagnoseAuthEnvironment();
+    if (envIssue) return envIssue;
+    switch (error?.code) {
+      case 'auth/unauthorized-domain':
+        return 'This domain isn\'t authorized in Firebase. Go to Firebase Console → Authentication → Settings → Authorized domains and add ' + location.hostname + '.';
+      case 'auth/operation-not-supported-in-this-environment':
+        return 'Google sign-in isn\'t supported in this environment (often file:// or an embedded webview). Open the app in a normal browser tab over http(s).';
+      case 'auth/configuration-not-found':
+        return 'Google sign-in isn\'t enabled for this Firebase project yet. Go to Firebase Console → Authentication → Sign-in method → enable Google.';
+      case 'auth/popup-blocked':
+        return 'Your browser blocked the sign-in popup. Allow popups for this site and try again.';
+      case 'auth/network-request-failed':
+        return 'Network error reaching Firebase — check your internet connection.';
+      default:
+        return error?.message || 'Sign-in failed for an unknown reason.';
+    }
+  }
+
   async function handleGoogleLogin() {
     if (isSigningIn) return;
     isSigningIn = true;
     const btn = document.getElementById('google-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...'; }
+
+    const envIssue = diagnoseAuthEnvironment();
+    if (envIssue) {
+      showToast(envIssue, 'error');
+      console.warn('Auth environment issue:', envIssue);
+      isSigningIn = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-google"></i> Continue with Google'; }
+      return;
+    }
 
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -1034,10 +1086,10 @@
           return;
         } catch (redirectError) {
           console.error('Google redirect sign-in error:', redirectError);
-          showToast('Google sign-in failed: ' + redirectError.message, 'error');
+          showToast(explainAuthError(redirectError), 'error');
         }
       } else if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
-        showToast('Google sign-in failed: ' + error.message, 'error');
+        showToast(explainAuthError(error), 'error');
       }
     } finally {
       isSigningIn = false;
@@ -1051,6 +1103,15 @@
     const btn = document.getElementById('apple-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...'; }
 
+    const envIssue = diagnoseAuthEnvironment();
+    if (envIssue) {
+      showToast(envIssue, 'error');
+      console.warn('Auth environment issue:', envIssue);
+      isSigningIn = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-apple"></i> Continue with Apple'; }
+      return;
+    }
+
     const provider = new firebase.auth.OAuthProvider('apple.com');
 
     try {
@@ -1063,10 +1124,10 @@
           return;
         } catch (redirectError) {
           console.error('Apple redirect sign-in error:', redirectError);
-          showToast('Apple sign-in failed: ' + redirectError.message, 'error');
+          showToast(explainAuthError(redirectError), 'error');
         }
       } else if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
-        showToast('Apple sign-in failed: ' + error.message, 'error');
+        showToast(explainAuthError(error), 'error');
       }
     } finally {
       isSigningIn = false;
@@ -1338,7 +1399,9 @@
 
       if (memErr) {
         if (memErr.code === '42P01') {
-          console.warn('group_members table not found yet — group chat needs DB setup');
+          console.warn('group_members table not found yet — run the group SQL at the top of the <script> tag in Supabase.');
+        } else {
+          console.warn('Load groups error:', memErr);
         }
         myGroups = [];
         return;
@@ -1530,8 +1593,19 @@
       openGroupChat(created);
     } catch (error) {
       console.error('Create group error:', error);
-      if (errorEl) errorEl.textContent = 'Failed to create group — check that group tables exist in Supabase';
-      showToast('Failed to create group', 'error');
+      const code = error?.code;
+      let msg = 'Failed to create group. Check the browser console for the exact Supabase error.';
+      if (code === '42P01') {
+        msg = 'The "groups"/"group_members" tables don\'t exist yet — run the SQL at the top of the <script> tag in Supabase.';
+      } else if (code === '22P02') {
+        msg = 'Column type mismatch — make sure created_by/user_id are TEXT columns, not uuid (see the SQL comment).';
+      } else if (code === '42501' || /row-level security/i.test(error?.message || '')) {
+        msg = 'Blocked by Row Level Security — disable RLS on groups/group_members, or add an insert/select policy.';
+      } else if (error?.message) {
+        msg = error.message;
+      }
+      if (errorEl) errorEl.textContent = msg;
+      showToast(msg, 'error');
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Create Group'; }
     }
