@@ -1,0 +1,22 @@
+name: heyapp
+description: HeyApp — Connect. Chat. Share. (Flutter wrapper around index.html)
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # Copied from ../index.html by build_apk.sh (not committed).
+    - assets/web/index.html
