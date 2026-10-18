@@ -1,35 +1,33 @@
 #!/usr/bin/env bash
-# Builds a release APK of the HeyApp Flutter wrapper with the lowest
-# supported Android minSdk (21 = Android 5.0 Lollipop).
+# Builds a release APK of the native HeyApp Flutter app.
 #
-# Requirements on the build machine: Flutter SDK (stable), JDK 17, Android SDK
-# (platform-tools, build-tools, platform android-35 or whatever the Flutter
-# template targets).
+# Prerequisites on the build machine: Flutter SDK (stable, 3.27+), JDK 17,
+# Android SDK. Place your Firebase Android config at android/app/google-services.json
+# (download it from the Firebase console, project "sayhi-2026").
 #
-#   ./build_apk.sh            -> build/app/outputs/flutter-apk/app-release.apk
+#   IMAGE_API_TOKEN=... ./build_apk.sh
+#
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$HERE/.." && pwd)"
-MIN_SDK=21
+MIN_SDK=24   # firebase_core / firebase_auth require API 24 (Android 7.0)
 GEN_DIR="$(mktemp -d)"
 trap 'rm -rf "$GEN_DIR"' EXIT
 
 cd "$HERE"
 
-# 1. Generate the Android host project (only if it doesn't exist yet).
+# 1. Generate the Android host project if it doesn't exist yet.
 if [ ! -d android ]; then
   flutter create --platforms=android --org com.heyapp --project-name heyapp "$GEN_DIR/heyapp" >/dev/null
   cp -R "$GEN_DIR/heyapp/android" ./android
 fi
 
-# 2. Pin minSdk to 21 (the template uses flutter.minSdkVersion).
-#    Handles both build.gradle (Groovy) and build.gradle.kts (Kotlin DSL).
+# 2. Pin minSdk (the template uses flutter.minSdkVersion). Handles Groovy and Kotlin DSL.
 for f in android/app/build.gradle android/app/build.gradle.kts; do
   [ -f "$f" ] && sed -i -E "s/flutter\.minSdkVersion/$MIN_SDK/" "$f"
 done
 
-# 3. Add the permissions the web app needs (internet, camera, mic for calls).
+# 3. Permissions: internet, camera/mic for calls, voice input, network state.
 python3 - <<'PY'
 import pathlib, re
 p = pathlib.Path("android/app/src/main/AndroidManifest.xml")
@@ -41,20 +39,26 @@ perms = [
     "android.permission.RECORD_AUDIO",
     "android.permission.MODIFY_AUDIO_SETTINGS",
 ]
-block = "".join(f'    <uses-permission android:name="{x}" />\n' for x in perms)
 for x in perms:
     xml = re.sub(rf'\s*<uses-permission android:name="{re.escape(x)}" />', "", xml)
+block = "".join(f'    <uses-permission android:name="{x}" />\n' for x in perms)
 xml = xml.replace("<application", block + "    <application", 1)
 p.write_text(xml)
 PY
 
-# 4. Bundle the web app from the repo root (single source of truth).
-mkdir -p assets/web
-cp "$REPO_ROOT/index.html" assets/web/index.html
+# 4. Firebase config must be present for sign-in.
+if [ ! -f android/app/google-services.json ]; then
+  echo "Missing android/app/google-services.json (download from Firebase console)." >&2
+  exit 1
+fi
 
-# 5. Build.
+# 5. Build with the image-API token passed as a compile-time define (not committed).
 flutter pub get
-flutter build apk --release --target-platform android-arm,android-arm64,android-x64
+DEFINES=()
+[ -n "${IMAGE_API_TOKEN:-}" ] && DEFINES+=(--dart-define="IMAGE_API_TOKEN=$IMAGE_API_TOKEN")
+[ -n "${APPLE_SERVICE_ID:-}" ] && DEFINES+=(--dart-define="APPLE_SERVICE_ID=$APPLE_SERVICE_ID")
+[ -n "${APPLE_REDIRECT_URI:-}" ] && DEFINES+=(--dart-define="APPLE_REDIRECT_URI=$APPLE_REDIRECT_URI")
+flutter build apk --release "${DEFINES[@]}" --target-platform android-arm,android-arm64,android-x64
 
 echo
 echo "minSdk in use:"

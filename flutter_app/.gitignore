@@ -10,4 +10,5 @@ local.properties
 android/.gradle/
 android/app/build/
 android/build/
-assets/web/
+# Firebase config is secret-ish per project; add your own locally
+android/app/google-services.json
