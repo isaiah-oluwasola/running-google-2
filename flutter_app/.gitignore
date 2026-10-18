@@ -1,0 +1,14 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+.gradle/
+local.properties
+android/.gradle/
+android/app/build/
+android/build/
+# Firebase config is secret-ish per project; add your own locally
+android/app/google-services.json
